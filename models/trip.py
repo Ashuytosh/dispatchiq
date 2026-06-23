@@ -217,3 +217,14 @@ def generate_invoice_number() -> str:
         return f"INV-{year}-{seq:04d}"
     finally:
         close_db(db)
+
+
+def get_trip_activity(trip_id: int) -> list[sqlite3.Row]:
+    db = get_db()
+    try:
+        return db.execute(
+            "SELECT * FROM activity_log WHERE trip_id = ? ORDER BY created_at ASC",
+            (trip_id,),
+        ).fetchall()
+    finally:
+        close_db(db)

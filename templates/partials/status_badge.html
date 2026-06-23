@@ -1,0 +1,13 @@
+{% set badge_classes = {
+  'created':    'bg-gray-700 text-gray-300',
+  'assigned':   'bg-blue-900 text-blue-300',
+  'dispatched': 'bg-yellow-900 text-yellow-300',
+  'in_transit': 'bg-orange-900 text-orange-300',
+  'delivered':  'bg-green-900 text-green-300',
+  'invoiced':   'bg-purple-900 text-purple-300',
+  'paid':       'bg-emerald-900 text-emerald-300',
+  'cancelled':  'bg-red-900 text-red-300',
+} %}
+<span class="px-2 py-1 rounded-full text-xs font-medium {{ badge_classes.get(trip.status, 'bg-gray-700 text-gray-300') }}">
+  {{ trip.status | replace('_', ' ') | title }}
+</span>

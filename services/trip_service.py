@@ -108,6 +108,12 @@ def get_dashboard_stats() -> dict[str, Any]:
             (today,),
         ).fetchone()
         today_revenue = row['total'] if row else 0
+
+        row = db.execute(
+            "SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips "
+            "WHERE strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')"
+        ).fetchone()
+        month_revenue = row['total'] if row else 0
     finally:
         close_db(db)
 
@@ -116,5 +122,6 @@ def get_dashboard_stats() -> dict[str, Any]:
         'today_created': today_created,
         'today_delivered': today_delivered,
         'today_revenue': today_revenue,
+        'month_revenue': month_revenue,
         'active': stats.get('assigned', 0) + stats.get('dispatched', 0) + stats.get('in_transit', 0),
     }

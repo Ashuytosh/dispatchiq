@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Settings — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold text-white mb-6">Settings</h1>
+
+  <form method="POST" action="{{ url_for('settings.save') }}" class="space-y-6">
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Company Details</h2>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Company Name</label>
+        <input type="text" name="company_name" value="{{ settings.get('company_name', '') }}"
+               placeholder="e.g. DispatchIQ Logistics"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Address</label>
+        <textarea name="company_address" rows="2"
+                  placeholder="Full business address"
+                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 resize-none">{{ settings.get('company_address', '') }}</textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Phone</label>
+          <input type="text" name="company_phone" value="{{ settings.get('company_phone', '') }}"
+                 placeholder="e.g. 9876543210"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">GST Number</label>
+          <input type="text" name="company_gst" value="{{ settings.get('company_gst', '') }}"
+                 placeholder="e.g. 27AABCU9603R1ZX"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Notifications</h2>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">WhatsApp Owner Phone</label>
+        <input type="text" name="whatsapp_owner_phone" value="{{ settings.get('whatsapp_owner_phone', '') }}"
+               placeholder="e.g. 919876543210 (with country code)"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Daily Summary Time</label>
+        <input type="time" name="daily_summary_time" value="{{ settings.get('daily_summary_time', '08:00') }}"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Integrations</h2>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Traccar Server URL</label>
+        <input type="url" name="traccar_url" value="{{ settings.get('traccar_url', '') }}"
+               placeholder="e.g. http://traccar.example.com:8082"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="traccar_enabled" id="traccar_enabled" value="1"
+               {% if settings.get('traccar_enabled') == '1' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="traccar_enabled" class="text-sm text-gray-300">Enable Traccar GPS tracking</label>
+      </div>
+    </div>
+
+    <div class="flex justify-end">
+      <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded transition">
+        Save Settings
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

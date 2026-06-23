@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Trips — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-white">Trips</h1>
+  <a href="{{ url_for('trips.create_form') }}"
+     class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition">
+    + New Trip
+  </a>
+</div>
+
+<form method="GET" class="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6 flex flex-wrap gap-3 items-end">
+  <div>
+    <label class="block text-xs text-gray-400 mb-1">Status</label>
+    <select name="status" class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      <option value="">All Statuses</option>
+      {% for s in ['created','assigned','dispatched','in_transit','delivered','invoiced','paid','cancelled'] %}
+        <option value="{{ s }}" {% if selected_status == s %}selected{% endif %}>
+          {{ s | replace('_',' ') | title }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="block text-xs text-gray-400 mb-1">Client</label>
+    <select name="client_id" class="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      <option value="">All Clients</option>
+      {% for client in clients %}
+        <option value="{{ client.id }}" {% if selected_client == client.id|string %}selected{% endif %}>
+          {{ client.name }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded transition">
+    Filter
+  </button>
+  {% if selected_status or selected_client %}
+  <a href="{{ url_for('trips.list_trips') }}" class="text-sm text-gray-400 hover:text-white py-2">Clear</a>
+  {% endif %}
+</form>
+
+<div class="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+  {% if trips %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-800 text-gray-400 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">LR #</th>
+          <th class="px-4 py-3 text-left">Client</th>
+          <th class="px-4 py-3 text-left">Route</th>
+          <th class="px-4 py-3 text-left">Vehicle</th>
+          <th class="px-4 py-3 text-left">Driver</th>
+          <th class="px-4 py-3 text-right">Weight (T)</th>
+          <th class="px-4 py-3 text-right">Freight</th>
+          <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        {% for trip in trips %}
+        <tr class="hover:bg-gray-800 cursor-pointer transition"
+            onclick="location.href='{{ url_for('trips.detail', trip_id=trip.id) }}'">
+          <td class="px-4 py-3 font-mono text-blue-400">{{ trip.lr_number or '—' }}</td>
+          <td class="px-4 py-3 text-gray-200">{{ trip.client_name or '—' }}</td>
+          <td class="px-4 py-3 text-gray-300 whitespace-nowrap">{{ trip.from_location }} → {{ trip.to_location }}</td>
+          <td class="px-4 py-3 text-gray-400">{{ trip.plate_number or '—' }}</td>
+          <td class="px-4 py-3 text-gray-400">{{ trip.driver_name or '—' }}</td>
+          <td class="px-4 py-3 text-right text-gray-300">{{ trip.weight_tons or 0 }}</td>
+          <td class="px-4 py-3 text-right text-gray-200">{{ trip.freight_amount | money }}</td>
+          <td class="px-4 py-3">{% include 'partials/status_badge.html' %}</td>
+          <td class="px-4 py-3 text-gray-400 whitespace-nowrap">{{ trip.created_at | date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="px-5 py-10 text-center text-gray-500">
+    No trips found. <a href="{{ url_for('trips.create_form') }}" class="text-blue-400 hover:underline">Create the first one.</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

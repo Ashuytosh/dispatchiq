@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Add Vehicle — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="flex items-center gap-3 mb-6">
+    <a href="{{ url_for('vehicles.list_vehicles') }}" class="text-gray-400 hover:text-white text-sm">← Vehicles</a>
+    <h1 class="text-2xl font-bold text-white">Add Vehicle</h1>
+  </div>
+
+  <form method="POST" action="{{ url_for('vehicles.create') }}">
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Plate Number <span class="text-red-400">*</span></label>
+        <input type="text" name="plate_number" required placeholder="e.g. MH12AB1234"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Vehicle Type <span class="text-red-400">*</span></label>
+        <select name="vehicle_type" required
+                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+          <option value="">Select type…</option>
+          <option value="truck">Truck</option>
+          <option value="trailer">Trailer</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Capacity (Tons) <span class="text-red-400">*</span></label>
+        <input type="number" name="capacity_tons" required min="0.1" step="0.1" placeholder="e.g. 10"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+    </div>
+
+    <div class="mt-5 flex justify-end gap-3">
+      <a href="{{ url_for('vehicles.list_vehicles') }}"
+         class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</a>
+      <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded transition">
+        Add Vehicle
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Drivers — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-white">Drivers</h1>
+  <a href="{{ url_for('drivers.create_form') }}"
+     class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition">
+    + Add Driver
+  </a>
+</div>
+
+<div class="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+  {% if drivers %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-800 text-gray-400 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">Name</th>
+          <th class="px-4 py-3 text-left">Phone</th>
+          <th class="px-4 py-3 text-left">License Number</th>
+          <th class="px-4 py-3 text-left">Assigned Vehicle</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        {% for d in drivers %}
+        <tr class="hover:bg-gray-800 transition">
+          <td class="px-4 py-3 text-gray-200 font-medium">{{ d.name }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ d.phone }}</td>
+          <td class="px-4 py-3 font-mono text-gray-300">{{ d.license_number }}</td>
+          <td class="px-4 py-3 text-gray-400">{{ d.assigned_vehicle_id or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="px-5 py-10 text-center text-gray-500">
+    No drivers added yet. <a href="{{ url_for('drivers.create_form') }}" class="text-blue-400 hover:underline">Add one.</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

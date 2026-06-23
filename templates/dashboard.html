@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-white">Dashboard</h1>
+  <a href="{{ url_for('trips.create_form') }}"
+     class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition">
+    + Create New Trip
+  </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+    <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total Active Trips</p>
+    <p class="text-3xl font-bold text-white">{{ stats.active }}</p>
+  </div>
+  <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+    <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">In Transit</p>
+    <p class="text-3xl font-bold text-orange-400">{{ stats.in_transit }}</p>
+  </div>
+  <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+    <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Delivered Today</p>
+    <p class="text-3xl font-bold text-emerald-400">{{ stats.today_delivered }}</p>
+  </div>
+  <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+    <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">This Month Revenue</p>
+    <p class="text-3xl font-bold text-blue-400">{{ stats.month_revenue | money }}</p>
+  </div>
+</div>
+
+<div class="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+  <div class="px-5 py-4 border-b border-gray-800">
+    <h2 class="text-sm font-semibold text-gray-200 uppercase tracking-wide">Active Trips</h2>
+  </div>
+  {% if trips %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-800 text-gray-400 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-3 text-left">LR #</th>
+          <th class="px-4 py-3 text-left">Client</th>
+          <th class="px-4 py-3 text-left">Route</th>
+          <th class="px-4 py-3 text-left">Vehicle</th>
+          <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        {% for trip in trips %}
+        <tr class="hover:bg-gray-800 cursor-pointer transition"
+            onclick="location.href='{{ url_for('trips.detail', trip_id=trip.id) }}'">
+          <td class="px-4 py-3 font-mono text-blue-400">{{ trip.lr_number or '—' }}</td>
+          <td class="px-4 py-3 text-gray-200">{{ trip.client_name or '—' }}</td>
+          <td class="px-4 py-3 text-gray-300">{{ trip.from_location }} → {{ trip.to_location }}</td>
+          <td class="px-4 py-3 text-gray-400">{{ trip.plate_number or '—' }}</td>
+          <td class="px-4 py-3">{% include 'partials/status_badge.html' %}</td>
+          <td class="px-4 py-3 text-gray-400">{{ trip.created_at | date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="px-5 py-10 text-center text-gray-500">
+    No active trips. <a href="{{ url_for('trips.create_form') }}" class="text-blue-400 hover:underline">Create one.</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

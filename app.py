@@ -9,9 +9,28 @@ from routes.settings_routes import settings_bp
 from routes.api_routes import api_bp
 
 
+def _fmt_date(value: str | None) -> str:
+    if not value:
+        return ''
+    try:
+        return f"{value[8:10]}-{value[5:7]}-{value[:4]}"
+    except Exception:
+        return str(value)
+
+
+def _fmt_money(value) -> str:
+    try:
+        return f"₹{float(value):,.0f}"
+    except Exception:
+        return '₹0'
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     app.secret_key = 'dispatchiq-dev-secret'
+
+    app.jinja_env.filters['date'] = _fmt_date
+    app.jinja_env.filters['money'] = _fmt_money
 
     init_db()
 
