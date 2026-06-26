@@ -3,7 +3,9 @@ from typing import Any
 from models import trip as trip_model
 from models import vehicle as vehicle_model
 from models.database import get_db, close_db
+from models.settings import get_setting
 from services import lr_generator, invoice_generator
+from services import whatsapp_service
 
 
 def _log_activity(trip_id: int, action: str, message: str) -> None:
@@ -42,6 +44,34 @@ def assign_vehicle_and_driver(trip_id: int, vehicle_id: int, driver_id: int) -> 
     trip_model.assign_trip(trip_id, vehicle_id, driver_id)
     vehicle_model.update_vehicle_status(vehicle_id, 'on_trip')
     _log_activity(trip_id, 'ASSIGNED', f"Assigned vehicle #{vehicle_id} and driver #{driver_id}")
+    _maybe_send_whatsapp(trip_id, 'assigned')
+
+
+def _maybe_send_whatsapp(trip_id: int, status: str) -> None:
+    if get_setting('whatsapp_enabled') != 'true':
+        return
+    owner_phone = get_setting('whatsapp_owner_phone', '')
+    if not owner_phone:
+        return
+    try:
+        trip = trip_model.get_trip_by_id(trip_id)
+        company = get_setting('company_name', 'DispatchIQ')
+        msg = whatsapp_service.format_trip_alert(trip, status, company)
+
+        sent = whatsapp_service.send_whatsapp(owner_phone, msg)
+        log_msg = f"WhatsApp alert sent to owner {owner_phone}" if sent else f"WhatsApp alert failed for owner {owner_phone}"
+        _log_activity(trip_id, 'WHATSAPP', log_msg)
+
+        client_phone = trip['client_phone'] or ''
+        if client_phone:
+            client_message = whatsapp_service.format_trip_alert(trip, status, company)
+            print(f"Sending to client: {client_phone}, message: {client_message}")
+            client_sent = whatsapp_service.send_whatsapp(client_phone, client_message)
+            client_log = f"WhatsApp alert sent to client {client_phone}" if client_sent else f"WhatsApp alert failed for client {client_phone}"
+            _log_activity(trip_id, 'WHATSAPP', client_log)
+
+    except Exception as e:
+        _log_activity(trip_id, 'WHATSAPP', f"WhatsApp alert failed: {e}")
 
 
 def advance_trip_status(trip_id: int, new_status: str) -> None:
@@ -56,23 +86,28 @@ def advance_trip_status(trip_id: int, new_status: str) -> None:
         trip_model.set_trip_lr_number(trip_id, lr_number)
         lr_generator.generate_lr(trip_id)
         _log_activity(trip_id, 'DISPATCHED', f"Trip dispatched. LR generated: {lr_number}")
+        _maybe_send_whatsapp(trip_id, 'dispatched')
 
     elif new_status == 'in_transit':
         _log_activity(trip_id, 'IN_TRANSIT', "Vehicle in transit")
+        _maybe_send_whatsapp(trip_id, 'in_transit')
 
     elif new_status == 'delivered':
         if trip['vehicle_id']:
             vehicle_model.update_vehicle_status(trip['vehicle_id'], 'available')
         _log_activity(trip_id, 'DELIVERED', "Goods delivered at destination")
+        _maybe_send_whatsapp(trip_id, 'delivered')
 
     elif new_status == 'invoiced':
         invoice_number = trip_model.generate_invoice_number()
         trip_model.set_trip_invoice_number(trip_id, invoice_number)
         invoice_generator.generate_invoice(trip_id)
         _log_activity(trip_id, 'INVOICED', f"Invoice generated: {invoice_number}")
+        _maybe_send_whatsapp(trip_id, 'invoiced')
 
     elif new_status == 'paid':
         _log_activity(trip_id, 'PAID', "Payment received. Trip closed.")
+        _maybe_send_whatsapp(trip_id, 'paid')
 
     else:
         _log_activity(trip_id, new_status.upper(), f"Status updated to {new_status}")

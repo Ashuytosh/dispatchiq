@@ -38,17 +38,64 @@
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
-      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Notifications</h2>
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">WhatsApp Notifications</h2>
+        {% if wa_connected %}
+          <span class="flex items-center gap-1.5 text-green-400 text-sm font-medium">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span> Connected
+          </span>
+        {% else %}
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1.5 text-red-400 text-sm">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span> Not Connected
+            </span>
+            <a href="http://localhost:3001" target="_blank"
+               class="text-xs bg-green-700 hover:bg-green-600 text-white px-3 py-1 rounded transition">
+              Connect WhatsApp
+            </a>
+          </div>
+        {% endif %}
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="whatsapp_enabled" id="whatsapp_enabled" value="true"
+               {% if settings.get('whatsapp_enabled') == 'true' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="whatsapp_enabled" class="text-sm text-gray-300">Enable WhatsApp notifications for trip status changes</label>
+      </div>
       <div>
-        <label class="block text-sm text-gray-300 mb-1">WhatsApp Owner Phone</label>
+        <label class="block text-sm text-gray-300 mb-1">Owner/Manager Phone for Alerts</label>
         <input type="text" name="whatsapp_owner_phone" value="{{ settings.get('whatsapp_owner_phone', '') }}"
-               placeholder="e.g. 919876543210 (with country code)"
+               placeholder="e.g. 919876543210 (country code + number, no + sign)"
                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Daily Summary Time</label>
         <input type="time" name="daily_summary_time" value="{{ settings.get('daily_summary_time', '08:00') }}"
                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Bank Details (for Invoices)</h2>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Bank Name</label>
+        <input type="text" name="bank_name" value="{{ settings.get('bank_name', '') }}"
+               placeholder="e.g. State Bank of India"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Account Number</label>
+          <input type="text" name="bank_account" value="{{ settings.get('bank_account', '') }}"
+                 placeholder="e.g. 12345678901"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">IFSC Code</label>
+          <input type="text" name="bank_ifsc" value="{{ settings.get('bank_ifsc', '') }}"
+                 placeholder="e.g. SBIN0001234"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+        </div>
       </div>
     </div>
 

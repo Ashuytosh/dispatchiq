@@ -6,3 +6,5 @@ venv/
 .env
 dispatchiq.db
 static/documents/
+wa-sender/node_modules/
+wa-sender/auth_store/

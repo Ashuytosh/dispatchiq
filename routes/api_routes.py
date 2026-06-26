@@ -62,3 +62,9 @@ def get_clients():
 def get_stats():
     stats = trip_service.get_dashboard_stats()
     return jsonify(stats)
+
+
+@api_bp.route('/whatsapp/status', methods=['GET'])
+def whatsapp_status():
+    from services.whatsapp_service import check_whatsapp_status
+    return jsonify({'connected': check_whatsapp_status()})

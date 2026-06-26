@@ -30,3 +30,36 @@ def create():
     except Exception as e:
         flash(f'Error: {e}', 'error')
         return redirect(url_for('clients.create_form'))
+
+
+@clients_bp.route('/<int:client_id>/edit', methods=['GET'])
+def edit_form(client_id: int):
+    client = client_model.get_client_by_id(client_id)
+    if not client:
+        flash('Client not found.', 'error')
+        return redirect(url_for('clients.list_clients'))
+    return render_template('clients/edit.html', client=client)
+
+
+@clients_bp.route('/<int:client_id>/edit', methods=['POST'])
+def edit(client_id: int):
+    try:
+        client_model.update_client(
+            client_id,
+            name=request.form['name'].strip(),
+            phone=request.form['phone'].strip(),
+            email=request.form.get('email', '').strip(),
+            address=request.form.get('address', '').strip(),
+            gst_number=request.form.get('gst_number', '').strip(),
+        )
+        flash('Client updated.', 'success')
+    except Exception as e:
+        flash(f'Error: {e}', 'error')
+    return redirect(url_for('clients.list_clients'))
+
+
+@clients_bp.route('/<int:client_id>/delete', methods=['POST'])
+def delete(client_id: int):
+    client_model.delete_client(client_id)
+    flash('Client deleted.', 'success')
+    return redirect(url_for('clients.list_clients'))

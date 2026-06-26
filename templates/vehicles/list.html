@@ -26,6 +26,7 @@
           <th class="px-4 py-3 text-left">Type</th>
           <th class="px-4 py-3 text-right">Capacity (T)</th>
           <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-right">Actions</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-800">
@@ -38,6 +39,15 @@
             <span class="px-2 py-1 rounded-full text-xs font-medium {{ status_classes.get(v.status, 'bg-gray-700 text-gray-300') }}">
               {{ v.status | replace('_', ' ') | title }}
             </span>
+          </td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <a href="{{ url_for('vehicles.edit_form', vehicle_id=v.id) }}"
+               class="text-blue-400 hover:text-blue-300 text-sm mr-3">Edit</a>
+            <form method="POST" action="{{ url_for('vehicles.delete', vehicle_id=v.id) }}"
+                  style="display:inline"
+                  onsubmit="return confirm('Delete {{ v.plate_number }}? This cannot be undone.')">
+              <button type="submit" class="text-red-400 hover:text-red-300 text-sm">Delete</button>
+            </form>
           </td>
         </tr>
         {% endfor %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Edit Vehicle — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <div class="flex items-center gap-3 mb-6">
+    <a href="{{ url_for('vehicles.list_vehicles') }}" class="text-gray-400 hover:text-white text-sm">← Vehicles</a>
+    <h1 class="text-2xl font-bold text-white">Edit Vehicle</h1>
+  </div>
+
+  <form method="POST" action="{{ url_for('vehicles.edit', vehicle_id=vehicle.id) }}">
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Plate Number <span class="text-red-400">*</span></label>
+        <input type="text" name="plate_number" required value="{{ vehicle.plate_number }}"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Vehicle Type <span class="text-red-400">*</span></label>
+        <select name="vehicle_type" required
+                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+          <option value="truck" {% if vehicle.vehicle_type == 'truck' %}selected{% endif %}>Truck</option>
+          <option value="trailer" {% if vehicle.vehicle_type == 'trailer' %}selected{% endif %}>Trailer</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Capacity (Tons) <span class="text-red-400">*</span></label>
+        <input type="number" name="capacity_tons" required min="0.1" step="0.1" value="{{ vehicle.capacity_tons }}"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Status</label>
+        <select name="status"
+                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+          <option value="available" {% if vehicle.status == 'available' %}selected{% endif %}>Available</option>
+          <option value="on_trip" {% if vehicle.status == 'on_trip' %}selected{% endif %}>On Trip</option>
+          <option value="maintenance" {% if vehicle.status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-5 flex justify-end gap-3">
+      <a href="{{ url_for('vehicles.list_vehicles') }}"
+         class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</a>
+      <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded transition">
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

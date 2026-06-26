@@ -50,6 +50,7 @@
             {% endif %}
           {% endfor %}
         </div>
+        <span id="wa-dot" class="w-2 h-2 rounded-full bg-gray-600 ml-3 flex-shrink-0" title="WhatsApp"></span>
       </div>
     </div>
   </nav>
@@ -75,5 +76,11 @@
     DispatchIQ — Built for Indian Logistics
   </footer>
 
+  <script>
+    fetch('/api/whatsapp/status').then(r=>r.json()).then(d=>{
+      const dot=document.getElementById('wa-dot');
+      if(dot) dot.className='w-2 h-2 rounded-full ml-3 flex-shrink-0 '+(d.connected?'bg-green-500':'bg-red-500');
+    }).catch(()=>{});
+  </script>
 </body>
 </html>
