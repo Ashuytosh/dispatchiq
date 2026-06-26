@@ -3,6 +3,7 @@ from typing import Any
 from models import trip as trip_model
 from models import vehicle as vehicle_model
 from models.database import get_db, close_db
+from services import lr_generator, invoice_generator
 
 
 def _log_activity(trip_id: int, action: str, message: str) -> None:
@@ -53,6 +54,7 @@ def advance_trip_status(trip_id: int, new_status: str) -> None:
     if new_status == 'dispatched':
         lr_number = trip_model.generate_lr_number()
         trip_model.set_trip_lr_number(trip_id, lr_number)
+        lr_generator.generate_lr(trip_id)
         _log_activity(trip_id, 'DISPATCHED', f"Trip dispatched. LR generated: {lr_number}")
 
     elif new_status == 'in_transit':
@@ -66,6 +68,7 @@ def advance_trip_status(trip_id: int, new_status: str) -> None:
     elif new_status == 'invoiced':
         invoice_number = trip_model.generate_invoice_number()
         trip_model.set_trip_invoice_number(trip_id, invoice_number)
+        invoice_generator.generate_invoice(trip_id)
         _log_activity(trip_id, 'INVOICED', f"Invoice generated: {invoice_number}")
 
     elif new_status == 'paid':

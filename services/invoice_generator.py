@@ -1,4 +1,5 @@
 import io
+import os
 import sqlite3
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -16,6 +17,9 @@ def generate_invoice_pdf(trip: sqlite3.Row) -> bytes:
     company_address = settings.get('company_address', '')
     company_phone = settings.get('company_phone', '')
     company_gst = settings.get('company_gst', '')
+    bank_name = settings.get('bank_name', '')
+    bank_account = settings.get('bank_account', '')
+    bank_ifsc = settings.get('bank_ifsc', '')
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=1.5*cm, bottomMargin=1.5*cm,
@@ -32,6 +36,8 @@ def generate_invoice_pdf(trip: sqlite3.Row) -> bytes:
     value_style = ParagraphStyle('value', parent=styles['Normal'], fontSize=10)
     right_style = ParagraphStyle('right', parent=styles['Normal'], fontSize=10,
                                   alignment=TA_RIGHT)
+    right_bold_style = ParagraphStyle('rightBold', parent=styles['Normal'], fontSize=11,
+                                       alignment=TA_RIGHT, fontName='Helvetica-Bold')
 
     story.append(Paragraph(company_name, title_style))
     if company_address:
@@ -102,7 +108,7 @@ def generate_invoice_pdf(trip: sqlite3.Row) -> bytes:
          Paragraph(f"Transportation of goods\n{trip['goods_description'] or ''}", value_style),
          Paragraph(str(trip['from_location'] or ''), value_style),
          Paragraph(str(trip['to_location'] or ''), value_style),
-         Paragraph(f"{trip['weight_tons'] or 0} T", value_style),
+         Paragraph(f"{trip['weight_tons'] or 0} MT", value_style),
          Paragraph(f"₹{float(trip['freight_amount'] or 0):,.0f}", right_style)],
     ]
     items_table = Table(items_data, colWidths=[1*cm, 5*cm, 3*cm, 3*cm, 2*cm, 3*cm])
@@ -118,22 +124,52 @@ def generate_invoice_pdf(trip: sqlite3.Row) -> bytes:
     story.append(items_table)
     story.append(Spacer(1, 0.2*cm))
 
+    freight = float(trip['freight_amount'] or 0)
+    cgst = freight * 0.09
+    sgst = freight * 0.09
+    total = freight + cgst + sgst
+    advance = float(trip['advance_paid'] or 0)
+    balance = total - advance
+
     total_data = [
-        ['', '', '', '', Paragraph('Freight Amount:', label_style),
-         Paragraph(f"₹{float(trip['freight_amount'] or 0):,.0f}", right_style)],
-        ['', '', '', '', Paragraph('Advance Paid:', label_style),
-         Paragraph(f"₹{float(trip['advance_paid'] or 0):,.0f}", right_style)],
+        ['', '', '', '', Paragraph('Freight Charges:', label_style),
+         Paragraph(f"₹{freight:,.0f}", right_style)],
+        ['', '', '', '', Paragraph('CGST (9%):', label_style),
+         Paragraph(f"₹{cgst:,.0f}", right_style)],
+        ['', '', '', '', Paragraph('SGST (9%):', label_style),
+         Paragraph(f"₹{sgst:,.0f}", right_style)],
+        ['', '', '', '', Paragraph('<b>Total Amount:</b>', value_style),
+         Paragraph(f"<b>₹{total:,.0f}</b>", right_bold_style)],
+        ['', '', '', '', Paragraph('Advance Received:', label_style),
+         Paragraph(f"₹{advance:,.0f}", right_style)],
         ['', '', '', '', Paragraph('<b>Balance Due:</b>', value_style),
-         Paragraph(f"<b>₹{float(trip['balance_amount'] or 0):,.0f}</b>", right_style)],
+         Paragraph(f"<b>₹{balance:,.0f}</b>", right_bold_style)],
     ]
     total_table = Table(total_data, colWidths=[1*cm, 5*cm, 3*cm, 3*cm, 3.5*cm, 2.5*cm])
     total_table.setStyle(TableStyle([
-        ('LINEABOVE', (4, 2), (-1, 2), 1, colors.grey),
+        ('LINEABOVE', (4, 3), (-1, 3), 1, colors.grey),
+        ('LINEABOVE', (4, 5), (-1, 5), 1, colors.grey),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(total_table)
-    story.append(Spacer(1, 1*cm))
+    story.append(Spacer(1, 0.8*cm))
+
+    # Payment / bank details
+    bank_lines = ['<b>Payment Mode: Bank Transfer</b>']
+    if bank_name:
+        bank_lines.append(f"Bank: {bank_name}")
+    if bank_account:
+        bank_lines.append(f"Account No.: {bank_account}")
+    if bank_ifsc:
+        bank_lines.append(f"IFSC: {bank_ifsc}")
+    if not (bank_name or bank_account or bank_ifsc):
+        bank_lines.append("Bank details: [Please update in Settings]")
+
+    bank_style = ParagraphStyle('bank', parent=styles['Normal'], fontSize=9,
+                                 backColor=colors.HexColor('#f8fafc'), borderPad=6)
+    story.append(Paragraph('<br/>'.join(bank_lines), bank_style))
+    story.append(Spacer(1, 0.8*cm))
 
     story.append(HRFlowable(width='100%', thickness=0.5, color=colors.grey))
     story.append(Spacer(1, 0.4*cm))
@@ -144,6 +180,7 @@ def generate_invoice_pdf(trip: sqlite3.Row) -> bytes:
         ['', '', ''],
         [Paragraph('________________________', label_style), '',
          Paragraph('________________________', label_style)],
+        ['', '', Paragraph('Authorised Signatory', label_style)],
     ]
     sig_table = Table(sig_data, colWidths=[7*cm, 3*cm, 7*cm])
     sig_table.setStyle(TableStyle([
@@ -151,6 +188,35 @@ def generate_invoice_pdf(trip: sqlite3.Row) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(sig_table)
+    story.append(Spacer(1, 0.5*cm))
+
+    footer_style = ParagraphStyle('footer', parent=styles['Normal'], alignment=TA_CENTER,
+                                   fontSize=8, textColor=colors.grey)
+    story.append(Paragraph("This is a computer generated invoice.", footer_style))
+    story.append(Paragraph(company_name, footer_style))
 
     doc.build(story)
     return buffer.getvalue()
+
+
+def generate_invoice(trip_id: int) -> str:
+    from models import trip as trip_model
+    from models import document as document_model
+
+    trip = trip_model.get_trip_by_id(trip_id)
+    if not trip:
+        raise ValueError(f"Trip {trip_id} not found")
+    if not trip['invoice_number']:
+        raise ValueError(f"Trip {trip_id} has no invoice number — cannot generate invoice PDF")
+
+    pdf_bytes = generate_invoice_pdf(trip)
+
+    out_dir = os.path.join('static', 'documents', 'invoices')
+    os.makedirs(out_dir, exist_ok=True)
+    file_path = os.path.join(out_dir, f"{trip['invoice_number']}.pdf")
+
+    with open(file_path, 'wb') as f:
+        f.write(pdf_bytes)
+
+    document_model.save_document(trip_id, 'invoice', file_path)
+    return file_path

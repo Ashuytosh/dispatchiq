@@ -53,7 +53,7 @@ def get_trip_by_id(trip_id: int) -> Optional[sqlite3.Row]:
             """SELECT t.*, c.name as client_name, c.phone as client_phone,
                       c.gst_number as client_gst, c.address as client_address,
                       v.plate_number, v.vehicle_type,
-                      d.name as driver_name, d.phone as driver_phone
+                      d.name as driver_name, d.phone as driver_phone, d.license_number as driver_license
                FROM trips t
                LEFT JOIN clients c ON t.client_id = c.id
                LEFT JOIN vehicles v ON t.vehicle_id = v.id

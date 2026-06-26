@@ -1,4 +1,5 @@
 import io
+import os
 import sqlite3
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -95,13 +96,20 @@ def generate_lr_pdf(trip: sqlite3.Row) -> bytes:
     story.append(consignor_table)
     story.append(Spacer(1, 0.4*cm))
 
+    # Vehicle & driver details (4 columns: vehicle no., vehicle type, driver name, driver phone+license)
+    driver_info = str(trip['driver_name'] or '')
+    if trip['driver_phone']:
+        driver_info += f"\nPh: {trip['driver_phone']}"
+    if trip['driver_license']:
+        driver_info += f"\nLic: {trip['driver_license']}"
+
     route_data = [
         [Paragraph('<b>From</b>', label_style), Paragraph('<b>To</b>', label_style),
-         Paragraph('<b>Vehicle</b>', label_style), Paragraph('<b>Driver</b>', label_style)],
+         Paragraph('<b>Vehicle No.</b>', label_style), Paragraph('<b>Driver Details</b>', label_style)],
         [Paragraph(str(trip['from_location'] or ''), value_style),
          Paragraph(str(trip['to_location'] or ''), value_style),
-         Paragraph(str(trip['plate_number'] or ''), value_style),
-         Paragraph(str(trip['driver_name'] or ''), value_style)],
+         Paragraph(f"{trip['plate_number'] or ''}\n{trip['vehicle_type'] or ''}", value_style),
+         Paragraph(driver_info, value_style)],
     ]
     route_table = Table(route_data, colWidths=[4.25*cm, 4.25*cm, 4.25*cm, 4.25*cm])
     route_table.setStyle(TableStyle([
@@ -110,17 +118,18 @@ def generate_lr_pdf(trip: sqlite3.Row) -> bytes:
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f1f5f9')),
         ('TOPPADDING', (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     story.append(route_table)
     story.append(Spacer(1, 0.4*cm))
 
     goods_data = [
         [Paragraph('<b>Goods Description</b>', label_style),
-         Paragraph('<b>Weight (Tons)</b>', label_style),
+         Paragraph('<b>Weight (MT)</b>', label_style),
          Paragraph('<b>Packages</b>', label_style),
          Paragraph('<b>Freight (₹)</b>', label_style)],
         [Paragraph(str(trip['goods_description'] or ''), value_style),
-         Paragraph(str(trip['weight_tons'] or ''), value_style),
+         Paragraph(f"{trip['weight_tons'] or 0} MT", value_style),
          Paragraph(str(trip['num_packages'] or ''), value_style),
          Paragraph(f"₹{float(trip['freight_amount'] or 0):,.0f}", value_style)],
     ]
@@ -135,15 +144,20 @@ def generate_lr_pdf(trip: sqlite3.Row) -> bytes:
     story.append(goods_table)
     story.append(Spacer(1, 0.4*cm))
 
+    balance = float(trip['balance_amount'] or 0)
+    payment_mode = 'To Pay' if balance > 0 else 'Paid'
+
     payment_data = [
         [Paragraph('<b>Freight Amount</b>', label_style),
          Paragraph('<b>Advance Paid</b>', label_style),
-         Paragraph('<b>Balance Due</b>', label_style)],
+         Paragraph('<b>Balance Due</b>', label_style),
+         Paragraph('<b>Payment Mode</b>', label_style)],
         [Paragraph(f"₹{float(trip['freight_amount'] or 0):,.0f}", value_style),
          Paragraph(f"₹{float(trip['advance_paid'] or 0):,.0f}", value_style),
-         Paragraph(f"₹{float(trip['balance_amount'] or 0):,.0f}", value_style)],
+         Paragraph(f"₹{balance:,.0f}", value_style),
+         Paragraph(payment_mode, value_style)],
     ]
-    payment_table = Table(payment_data, colWidths=[5.67*cm, 5.67*cm, 5.67*cm])
+    payment_table = Table(payment_data, colWidths=[4.25*cm, 4.25*cm, 4.25*cm, 4.25*cm])
     payment_table.setStyle(TableStyle([
         ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
@@ -160,6 +174,8 @@ def generate_lr_pdf(trip: sqlite3.Row) -> bytes:
         [Paragraph('', value_style), Paragraph('', value_style), Paragraph('', value_style)],
         [Paragraph('________________________', label_style), Paragraph('', label_style),
          Paragraph('________________________', label_style)],
+        [Paragraph('', label_style), Paragraph('', label_style),
+         Paragraph('Authorised Signatory', label_style)],
     ]
     sig_table = Table(sig_data, colWidths=[5.67*cm, 5.67*cm, 5.67*cm])
     sig_table.setStyle(TableStyle([
@@ -167,6 +183,35 @@ def generate_lr_pdf(trip: sqlite3.Row) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(sig_table)
+    story.append(Spacer(1, 0.5*cm))
+
+    footer_style = ParagraphStyle('footer', parent=styles['Normal'], alignment=TA_CENTER,
+                                   fontSize=8, textColor=colors.grey)
+    story.append(Paragraph("This is a computer generated document.", footer_style))
+    story.append(Paragraph(company_name, footer_style))
 
     doc.build(story)
     return buffer.getvalue()
+
+
+def generate_lr(trip_id: int) -> str:
+    from models import trip as trip_model
+    from models import document as document_model
+
+    trip = trip_model.get_trip_by_id(trip_id)
+    if not trip:
+        raise ValueError(f"Trip {trip_id} not found")
+    if not trip['lr_number']:
+        raise ValueError(f"Trip {trip_id} has no LR number — cannot generate LR PDF")
+
+    pdf_bytes = generate_lr_pdf(trip)
+
+    out_dir = os.path.join('static', 'documents', 'lr')
+    os.makedirs(out_dir, exist_ok=True)
+    file_path = os.path.join(out_dir, f"{trip['lr_number']}.pdf")
+
+    with open(file_path, 'wb') as f:
+        f.write(pdf_bytes)
+
+    document_model.save_document(trip_id, 'lr', file_path)
+    return file_path

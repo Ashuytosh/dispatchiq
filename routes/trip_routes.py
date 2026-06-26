@@ -1,10 +1,12 @@
 import io
+import os
 from flask import (Blueprint, render_template, request, redirect,
                    url_for, flash, send_file)
 from models import trip as trip_model
 from models import vehicle as vehicle_model
 from models import driver as driver_model
 from models import client as client_model
+from models import document as document_model
 from services import trip_service
 from services import lr_generator
 from services import invoice_generator
@@ -95,6 +97,10 @@ def download_lr(trip_id: int):
     if not trip or not trip['lr_number']:
         flash('LR not available for this trip.', 'error')
         return redirect(url_for('trips.detail', trip_id=trip_id))
+    doc = document_model.get_document(trip_id, 'lr')
+    if doc and os.path.exists(doc['file_path']):
+        return send_file(doc['file_path'], mimetype='application/pdf',
+                         as_attachment=True, download_name=f"{trip['lr_number']}.pdf")
     pdf_bytes = lr_generator.generate_lr_pdf(trip)
     return send_file(
         io.BytesIO(pdf_bytes),
@@ -110,6 +116,10 @@ def download_invoice(trip_id: int):
     if not trip or not trip['invoice_number']:
         flash('Invoice not available for this trip.', 'error')
         return redirect(url_for('trips.detail', trip_id=trip_id))
+    doc = document_model.get_document(trip_id, 'invoice')
+    if doc and os.path.exists(doc['file_path']):
+        return send_file(doc['file_path'], mimetype='application/pdf',
+                         as_attachment=True, download_name=f"{trip['invoice_number']}.pdf")
     pdf_bytes = invoice_generator.generate_invoice_pdf(trip)
     return send_file(
         io.BytesIO(pdf_bytes),
