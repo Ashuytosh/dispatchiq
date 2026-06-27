@@ -2,6 +2,9 @@ import subprocess
 import sys
 import os
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 
 def main() -> None:
     print("Starting DispatchIQ...")
@@ -14,7 +17,9 @@ def main() -> None:
         cwd=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'wa-sender'),
     )
 
-    flask = subprocess.Popen([sys.executable, 'run.py'])
+    env = os.environ.copy()
+    env['PYTHONIOENCODING'] = 'utf-8'
+    flask = subprocess.Popen([sys.executable, 'run.py'], env=env)
 
     try:
         flask.wait()

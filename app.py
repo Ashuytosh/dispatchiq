@@ -42,4 +42,10 @@ def create_app() -> Flask:
     app.register_blueprint(settings_bp)
     app.register_blueprint(api_bp)
 
+    from services.scheduler import start_scheduler
+    try:
+        start_scheduler(app)
+    except Exception:
+        pass
+
     return app

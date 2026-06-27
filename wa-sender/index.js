@@ -70,6 +70,37 @@ async function connectToWhatsApp() {
       }
     }
   });
+
+  sock.ev.on('messages.upsert', async (m) => {
+    const msg = m.messages[0];
+    if (!msg.message || msg.key.fromMe) return;
+
+    const text = msg.message.conversation ||
+                 msg.message.extendedTextMessage?.text || '';
+    if (!text.trim()) return;
+
+    const sender = msg.key.remoteJid.replace('@s.whatsapp.net', '');
+
+    try {
+      const configRes = await fetch('http://localhost:5000/api/settings/owner-phone');
+      const config = await configRes.json();
+      if (sender !== config.owner_phone) return;
+
+      console.log(`[WA] AI trip request from owner: ${text.substring(0, 60)}...`);
+      const res = await fetch('http://localhost:5000/api/ai/parse-trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sender }),
+      });
+      const result = await res.json();
+      if (result.reply) {
+        await sock.sendMessage(msg.key.remoteJid, { text: result.reply });
+        console.log('[WA] AI reply sent');
+      }
+    } catch (err) {
+      console.log('[WA] AI processing error:', err.message);
+    }
+  });
 }
 
 // ── Express ──────────────────────────────────────────────────────────────────

@@ -150,6 +150,48 @@
       </div>
     </div>
 
+    <!-- AI Configuration -->
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">🤖 AI Configuration</h2>
+        {% if settings.get('gemini_api_key') %}
+          <span class="text-xs text-green-400 font-medium">✅ Gemini Configured</span>
+        {% else %}
+          <span class="text-xs text-red-400">🔴 Add API key to enable AI features</span>
+        {% endif %}
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-1">Gemini API Key</label>
+        <div class="flex gap-2">
+          <input type="password" name="gemini_api_key" id="gemini_api_key"
+                 value="{{ settings.get('gemini_api_key', '') }}"
+                 placeholder="AIza..."
+                 class="flex-1 bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 font-mono text-sm">
+          <button type="button" onclick="toggleGeminiKey()"
+                  class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded text-xs transition"
+                  id="gemini_toggle">Show</button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Get your key from Google AI Studio (aistudio.google.com)</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="ai_trip_creation_enabled" id="ai_trip_creation_enabled" value="true"
+               {% if settings.get('ai_trip_creation_enabled') == 'true' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="ai_trip_creation_enabled" class="text-sm text-gray-300">
+          Enable AI trip creation via WhatsApp (owner sends text → trip auto-created)
+        </label>
+      </div>
+      <div>
+        <button type="button" onclick="testSummary()"
+                class="bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+          📊 Send Test Summary Now
+        </button>
+        <div id="summary-result" class="mt-3 hidden">
+          <pre class="bg-gray-800 border border-gray-700 rounded p-3 text-xs text-gray-300 whitespace-pre-wrap leading-relaxed"></pre>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Bank Details (for Invoices)</h2>
       <div>
@@ -200,6 +242,31 @@
 </div>
 
 <script>
+function toggleGeminiKey() {
+  const inp = document.getElementById('gemini_api_key');
+  const btn = document.getElementById('gemini_toggle');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = 'Hide';
+  } else {
+    inp.type = 'password';
+    btn.textContent = 'Show';
+  }
+}
+
+function testSummary() {
+  const result = document.getElementById('summary-result');
+  const pre = result.querySelector('pre');
+  result.classList.remove('hidden');
+  pre.textContent = '⏳ Generating summary via Gemini...';
+  fetch('/api/ai/test-summary', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      pre.textContent = d.success ? d.summary : '❌ ' + d.summary;
+    })
+    .catch(() => { pre.textContent = '❌ Request failed.'; });
+}
+
 (function () {
   const iframe = document.getElementById('wa-iframe-wrap');
   const connected = document.getElementById('wa-connected-wrap');

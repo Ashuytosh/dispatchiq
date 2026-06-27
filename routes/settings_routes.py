@@ -11,6 +11,7 @@ SETTINGS_KEYS = [
     'bank_name', 'bank_account', 'bank_ifsc',
     'whatsapp_enabled', 'whatsapp_owner_phone', 'daily_summary_time',
     'notify_on_dispatched', 'notify_on_delivered', 'notify_on_invoiced', 'notify_on_paid',
+    'gemini_api_key', 'ai_trip_creation_enabled',
     'traccar_url', 'traccar_enabled',
 ]
 

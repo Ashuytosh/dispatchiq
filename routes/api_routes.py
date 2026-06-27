@@ -68,3 +68,65 @@ def get_stats():
 def whatsapp_status():
     from services.whatsapp_service import check_whatsapp_status
     return jsonify({'connected': check_whatsapp_status()})
+
+
+@api_bp.route('/settings/owner-phone', methods=['GET'])
+def get_owner_phone():
+    from models.settings import get_setting
+    return jsonify({'owner_phone': get_setting('whatsapp_owner_phone', '')})
+
+
+@api_bp.route('/ai/parse-trip', methods=['POST'])
+def ai_parse_trip():
+    from services.ai_parser import parse_trip_from_text
+    data = request.get_json(force=True) or {}
+    text = (data.get('text', '') or '').strip()
+    if not text:
+        return jsonify({'success': False, 'reply': '❌ Empty message.'})
+
+    result = parse_trip_from_text(text)
+    if result is None:
+        return jsonify({'success': False,
+            'reply': '❌ AI unavailable.\nCheck Gemini API key in Settings.'})
+    if 'error' in result:
+        return jsonify({'success': False,
+            'reply': "❌ Could not understand.\nTry: '20 ton steel Tarapur to Kalamboli Tata Steel'"})
+    if not result.get('client_id'):
+        return jsonify({'success': False,
+            'reply': (f"⚠️ Client not found.\n"
+                      f"Parsed: {result.get('from_location')} → {result.get('to_location')}, "
+                      f"{result.get('weight_tons')} MT\n"
+                      f"Add client in DispatchIQ first.")})
+    try:
+        trip_id = trip_service.create_new_trip({
+            'client_id': result['client_id'],
+            'from_location': result['from_location'],
+            'to_location': result['to_location'],
+            'goods_description': result.get('goods_description', ''),
+            'weight_tons': result.get('weight_tons') or 0,
+            'num_packages': result.get('num_packages') or 0,
+            'freight_amount': result.get('freight_amount') or 0,
+        })
+        reply = (f"✅ Trip Created!\n━━━━━━━━━━━━\n"
+                 f"Trip #: {trip_id}\nClient: {result['client_match']}\n"
+                 f"From: {result['from_location']}\nTo: {result['to_location']}\n"
+                 f"Weight: {result.get('weight_tons')} MT\n"
+                 f"Freight: ₹{float(result.get('freight_amount') or 0):,.0f}\n\n"
+                 f"Open DispatchIQ to assign vehicle.")
+        return jsonify({'success': True, 'reply': reply})
+    except Exception as e:
+        return jsonify({'success': False, 'reply': f'❌ Trip creation failed: {e}'})
+
+
+@api_bp.route('/ai/test-summary', methods=['POST'])
+def ai_test_summary():
+    from services.daily_summary import generate_daily_summary
+    from services.whatsapp_service import send_whatsapp
+    from models.settings import get_setting
+    summary = generate_daily_summary()
+    if not summary:
+        return jsonify({'success': False, 'summary': 'Failed — check Gemini API key in Settings.'})
+    owner_phone = get_setting('whatsapp_owner_phone', '')
+    if owner_phone:
+        send_whatsapp(owner_phone, summary)
+    return jsonify({'success': True, 'summary': summary})
