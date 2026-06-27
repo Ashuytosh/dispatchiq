@@ -5,6 +5,40 @@
 <div class="max-w-2xl mx-auto">
   <h1 class="text-2xl font-bold text-white mb-6">Settings</h1>
 
+  <!-- WhatsApp connection panel — outside the form so it doesn't submit -->
+  <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">WhatsApp Connection</h2>
+      <span id="wa-status-badge" class="flex items-center gap-1.5 text-sm font-medium
+        {{ 'text-green-400' if wa_connected else 'text-red-400' }}">
+        <span id="wa-status-dot" class="w-2 h-2 rounded-full
+          {{ 'bg-green-500' if wa_connected else 'bg-red-500' }}"></span>
+        <span id="wa-status-text">{{ 'Connected' if wa_connected else 'Not Connected' }}</span>
+      </span>
+    </div>
+
+    <!-- Shown when connected -->
+    <div id="wa-connected-wrap" style="{{ '' if wa_connected else 'display:none' }}">
+      <p class="text-green-400 text-sm mb-3">✅ WhatsApp is linked and ready to send messages.</p>
+      <form method="POST" action="http://localhost:3001/disconnect" target="_blank">
+        <button type="submit"
+                class="text-xs bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded transition">
+          Disconnect WhatsApp
+        </button>
+      </form>
+    </div>
+
+    <!-- Shown when disconnected: embedded QR iframe -->
+    <div id="wa-iframe-wrap" style="{{ 'display:none' if wa_connected else '' }}">
+      <p class="text-gray-400 text-xs mb-3">Scan the QR code below with WhatsApp to connect.</p>
+      <iframe src="http://localhost:3001"
+              class="w-full rounded-lg border border-gray-700 bg-gray-950"
+              style="height:400px"
+              title="WhatsApp QR Code">
+      </iframe>
+    </div>
+  </div>
+
   <form method="POST" action="{{ url_for('settings.save') }}" class="space-y-6">
 
     <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
@@ -38,24 +72,7 @@
     </div>
 
     <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">WhatsApp Notifications</h2>
-        {% if wa_connected %}
-          <span class="flex items-center gap-1.5 text-green-400 text-sm font-medium">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span> Connected
-          </span>
-        {% else %}
-          <div class="flex items-center gap-3">
-            <span class="flex items-center gap-1.5 text-red-400 text-sm">
-              <span class="w-2 h-2 rounded-full bg-red-500"></span> Not Connected
-            </span>
-            <a href="http://localhost:3001" target="_blank"
-               class="text-xs bg-green-700 hover:bg-green-600 text-white px-3 py-1 rounded transition">
-              Connect WhatsApp
-            </a>
-          </div>
-        {% endif %}
-      </div>
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">WhatsApp Notifications</h2>
       <div class="flex items-center gap-3">
         <input type="checkbox" name="whatsapp_enabled" id="whatsapp_enabled" value="true"
                {% if settings.get('whatsapp_enabled') == 'true' %}checked{% endif %}
@@ -72,6 +89,64 @@
         <label class="block text-sm text-gray-300 mb-1">Daily Summary Time</label>
         <input type="time" name="daily_summary_time" value="{{ settings.get('daily_summary_time', '08:00') }}"
                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+    </div>
+
+    <!-- Notification Recipients -->
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Notification Recipients</h2>
+      <p class="text-xs text-gray-500">Select which clients receive WhatsApp alerts for their shipments.</p>
+      {% if clients %}
+        <div class="space-y-2">
+          {% for client in clients %}
+            <div class="flex items-center gap-3 py-2 border-b border-gray-800 last:border-0">
+              <input type="checkbox"
+                     name="notify_client_{{ client['id'] }}"
+                     id="nc_{{ client['id'] }}"
+                     value="true"
+                     {% if notify_clients.get(client['id']|string) %}checked{% endif %}
+                     class="w-4 h-4 bg-gray-800 border-gray-600 rounded flex-shrink-0">
+              <label for="nc_{{ client['id'] }}" class="flex-1 cursor-pointer">
+                <span class="text-sm text-gray-200 font-medium">{{ client['name'] }}</span>
+                {% if client['phone'] %}
+                  <span class="text-xs text-gray-500 ml-2">{{ client['phone'] }}</span>
+                {% endif %}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-sm text-gray-500 italic">No clients added yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Notification Events -->
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-3">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Notify Clients On</h2>
+      <p class="text-xs text-gray-500">Choose which events trigger a client WhatsApp alert.</p>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="notify_on_dispatched" id="notify_on_dispatched" value="true"
+               {% if settings.get('notify_on_dispatched') == 'true' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="notify_on_dispatched" class="text-sm text-gray-300">Dispatched (LR generated, vehicle leaves)</label>
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="notify_on_delivered" id="notify_on_delivered" value="true"
+               {% if settings.get('notify_on_delivered') == 'true' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="notify_on_delivered" class="text-sm text-gray-300">Delivered (goods received at destination)</label>
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="notify_on_invoiced" id="notify_on_invoiced" value="true"
+               {% if settings.get('notify_on_invoiced') == 'true' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="notify_on_invoiced" class="text-sm text-gray-300">Invoiced (invoice generated, payment due)</label>
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="checkbox" name="notify_on_paid" id="notify_on_paid" value="true"
+               {% if settings.get('notify_on_paid') == 'true' %}checked{% endif %}
+               class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
+        <label for="notify_on_paid" class="text-sm text-gray-300">Paid (payment received, trip closed)</label>
       </div>
     </div>
 
@@ -123,4 +198,39 @@
     </div>
   </form>
 </div>
+
+<script>
+(function () {
+  const iframe = document.getElementById('wa-iframe-wrap');
+  const connected = document.getElementById('wa-connected-wrap');
+  const dot = document.getElementById('wa-status-dot');
+  const text = document.getElementById('wa-status-text');
+  const badge = document.getElementById('wa-status-badge');
+
+  function applyState(isConnected) {
+    if (isConnected) {
+      iframe.style.display = 'none';
+      connected.style.display = '';
+      dot.className = 'w-2 h-2 rounded-full bg-green-500';
+      text.textContent = 'Connected';
+      badge.className = 'flex items-center gap-1.5 text-sm font-medium text-green-400';
+    } else {
+      iframe.style.display = '';
+      connected.style.display = 'none';
+      dot.className = 'w-2 h-2 rounded-full bg-red-500';
+      text.textContent = 'Not Connected';
+      badge.className = 'flex items-center gap-1.5 text-sm font-medium text-red-400';
+    }
+  }
+
+  function poll() {
+    fetch('/api/whatsapp/status')
+      .then(r => r.json())
+      .then(d => applyState(d.connected))
+      .catch(() => {});
+  }
+
+  setInterval(poll, 3000);
+})();
+</script>
 {% endblock %}

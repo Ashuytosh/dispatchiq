@@ -1,7 +1,9 @@
+import json
 from datetime import date
 from typing import Any
 from models import trip as trip_model
 from models import vehicle as vehicle_model
+from models import client as client_model
 from models.database import get_db, close_db
 from models.settings import get_setting
 from services import lr_generator, invoice_generator
@@ -58,17 +60,32 @@ def _maybe_send_whatsapp(trip_id: int, status: str) -> None:
         company = get_setting('company_name', 'DispatchIQ')
         msg = whatsapp_service.format_trip_alert(trip, status, company)
 
+        print(f"Owner phone: {owner_phone}")
         sent = whatsapp_service.send_whatsapp(owner_phone, msg)
-        log_msg = f"WhatsApp alert sent to owner {owner_phone}" if sent else f"WhatsApp alert failed for owner {owner_phone}"
-        _log_activity(trip_id, 'WHATSAPP', log_msg)
+        _log_activity(trip_id, 'WHATSAPP',
+            f"WhatsApp alert {'sent' if sent else 'failed'} for owner {owner_phone}")
 
-        client_phone = trip['client_phone'] or ''
-        if client_phone:
-            client_message = whatsapp_service.format_trip_alert(trip, status, company)
-            print(f"Sending to client: {client_phone}, message: {client_message}")
-            client_sent = whatsapp_service.send_whatsapp(client_phone, client_message)
-            client_log = f"WhatsApp alert sent to client {client_phone}" if client_sent else f"WhatsApp alert failed for client {client_phone}"
-            _log_activity(trip_id, 'WHATSAPP', client_log)
+        client_id = trip['client_id']
+        notify_map = json.loads(get_setting('notify_clients', '{}') or '{}')
+        is_enabled = notify_map.get(str(client_id), False)
+        print(f"Client ID: {client_id}, enabled: {is_enabled}")
+
+        event_key = f'notify_on_{status}'
+        event_enabled = get_setting(event_key) == 'true'
+        print(f"Event: {status}, notify enabled: {event_enabled}")
+
+        if is_enabled and event_enabled:
+            client = client_model.get_client_by_id(client_id)
+            raw_phone = (client['phone'] or '') if client else ''
+            client_phone = raw_phone.replace('+', '')
+            if not client_phone.startswith('91'):
+                client_phone = '91' + client_phone
+            print(f"Client phone: {client_phone}")
+            if client_phone and client_phone != '91':
+                print(f"Sending to client: {client_phone}")
+                client_sent = whatsapp_service.send_whatsapp(client_phone, msg)
+                _log_activity(trip_id, 'WHATSAPP',
+                    f"WhatsApp alert {'sent' if client_sent else 'failed'} for client {client_phone}")
 
     except Exception as e:
         _log_activity(trip_id, 'WHATSAPP', f"WhatsApp alert failed: {e}")
