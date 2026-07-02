@@ -16,6 +16,7 @@ def seed() -> None:
         _seed_settings(db)
         _seed_trips(db)
         db.commit()
+        _seed_admin_user()
         print("Seed data inserted successfully.")
     except Exception as e:
         db.rollback()
@@ -209,6 +210,13 @@ def _seed_trips(db: sqlite3.Connection) -> None:
             "INSERT INTO activity_log (trip_id, action, message) VALUES (?,?,?)",
             (trip_id, actions.get(status, status.upper()), f"Seed data: trip in {status} status"),
         )
+
+
+def _seed_admin_user() -> None:
+    from models.user import count_users, create_user
+    if count_users() == 0:
+        create_user('admin', 'admin@dispatchiq.local', 'admin123', 'Administrator', 'admin')
+        print("Default admin created — username: admin, password: admin123")
 
 
 if __name__ == '__main__':

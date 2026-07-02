@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import settings as settings_model
 from models import client as client_model
 from services.whatsapp_service import check_whatsapp_status
+from services.auth import admin_required
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
 
@@ -17,6 +18,7 @@ SETTINGS_KEYS = [
 
 
 @settings_bp.route('/')
+@admin_required
 def index():
     current = settings_model.get_all_settings()
     wa_connected = check_whatsapp_status()
@@ -30,6 +32,7 @@ def index():
 
 
 @settings_bp.route('/save', methods=['POST'])
+@admin_required
 def save():
     for key in SETTINGS_KEYS:
         value = request.form.get(key, '')

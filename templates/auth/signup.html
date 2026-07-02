@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — DispatchIQ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen flex flex-col items-center justify-center px-4 py-8">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="w-full max-w-md mb-4 space-y-2">
+        {% for category, message in messages %}
+          <div class="px-4 py-3 rounded-lg text-sm font-medium
+            {% if category == 'success' %}bg-emerald-900 text-emerald-200 border border-emerald-700
+            {% else %}bg-red-900 text-red-300 border border-red-700{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div id="signup-card"
+       class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 opacity-0">
+
+    <div class="text-center mb-8">
+      <div class="text-4xl mb-2">🚚</div>
+      <h1 class="text-2xl font-bold text-amber-400 tracking-tight">
+        {% if is_first %}Set Up DispatchIQ{% else %}Create Account{% endif %}
+      </h1>
+      <p class="text-gray-400 text-sm mt-1">
+        {% if is_first %}Create your admin account to get started{% else %}Add a new team member{% endif %}
+      </p>
+    </div>
+
+    <form method="POST" action="/signup" class="space-y-4">
+
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5">Full Name</label>
+        <input type="text" name="full_name" required
+               value="{{ form.get('full_name', '') }}"
+               placeholder="Ashutosh Sahoo"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500
+                      rounded-lg px-4 py-2.5 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5">Email Address</label>
+        <input type="email" name="email" required
+               value="{{ form.get('email', '') }}"
+               placeholder="you@company.com"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500
+                      rounded-lg px-4 py-2.5 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5">Username</label>
+        <input type="text" name="username" required
+               value="{{ form.get('username', '') }}"
+               placeholder="ashutosh"
+               autocomplete="username"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500
+                      rounded-lg px-4 py-2.5 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5">Password</label>
+        <div class="relative">
+          <input type="password" name="password" id="pw" required
+                 placeholder="Min. 6 characters"
+                 autocomplete="new-password"
+                 oninput="checkStrength(this.value)"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500
+                        rounded-lg px-4 pr-10 py-2.5 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+          <button type="button" onclick="togglePw('pw')"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+        <div id="strength-bar" class="mt-1.5 hidden">
+          <div class="flex items-center gap-2">
+            <div class="flex gap-1 flex-1">
+              <div id="s1" class="h-1 flex-1 rounded-full bg-gray-700 transition-colors duration-200"></div>
+              <div id="s2" class="h-1 flex-1 rounded-full bg-gray-700 transition-colors duration-200"></div>
+              <div id="s3" class="h-1 flex-1 rounded-full bg-gray-700 transition-colors duration-200"></div>
+            </div>
+            <span id="strength-label" class="text-xs text-gray-500 w-12 text-right"></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5">Confirm Password</label>
+        <div class="relative">
+          <input type="password" name="confirm_password" id="cpw" required
+                 placeholder="Repeat password"
+                 autocomplete="new-password"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-100 placeholder-gray-500
+                        rounded-lg px-4 pr-10 py-2.5 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+          <button type="button" onclick="togglePw('cpw')"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {% if not is_first %}
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5">Role</label>
+        <select name="role"
+                class="w-full bg-gray-800 border border-gray-700 text-gray-100
+                       rounded-lg px-4 py-2.5 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-amber-500 transition">
+          <option value="dispatcher">Dispatcher</option>
+          <option value="viewer">Viewer</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      {% endif %}
+
+      <button type="submit"
+              class="w-full bg-amber-500 hover:bg-amber-600 text-gray-950 font-semibold
+                     py-2.5 px-4 rounded-lg tracking-wide text-sm transition duration-150 mt-2
+                     focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-gray-900">
+        {% if is_first %}Create Admin Account{% else %}Create Account{% endif %}
+      </button>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-gray-500">
+      Already have an account?
+      <a href="/login" class="text-amber-400 hover:text-amber-300 font-medium transition">Sign In</a>
+    </div>
+  </div>
+
+  <p class="mt-8 text-xs text-gray-600">© 2026 DispatchIQ — Built for Indian Logistics</p>
+
+  <script>
+    setTimeout(() => {
+      const card = document.getElementById('signup-card');
+      card.style.transition = 'opacity 0.4s ease';
+      card.style.opacity = '1';
+    }, 30);
+
+    function togglePw(id) {
+      const inp = document.getElementById(id);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function checkStrength(pw) {
+      const bar = document.getElementById('strength-bar');
+      const label = document.getElementById('strength-label');
+      const s = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+      if (!pw) { bar.classList.add('hidden'); return; }
+      bar.classList.remove('hidden');
+      let score = 0;
+      if (pw.length >= 8) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      const colors = ['bg-red-500', 'bg-amber-400', 'bg-emerald-500'];
+      const labels = ['Weak', 'Medium', 'Strong'];
+      const labelColors = ['text-red-400', 'text-amber-400', 'text-emerald-400'];
+      s.forEach((el, i) => {
+        el.className = 'h-1 flex-1 rounded-full transition-colors duration-200 ' +
+          (i < score ? colors[score - 1] : 'bg-gray-700');
+      });
+      label.textContent = labels[score - 1] || 'Weak';
+      label.className = 'text-xs w-12 text-right ' + (labelColors[score - 1] || 'text-red-400');
+    }
+  </script>
+</body>
+</html>

@@ -50,7 +50,50 @@
             {% endif %}
           {% endfor %}
         </div>
-        <span id="wa-dot" class="w-2 h-2 rounded-full bg-gray-600 ml-3 flex-shrink-0" title="WhatsApp"></span>
+        <div class="flex items-center gap-3 ml-4">
+          {% if current_user %}
+          <div class="relative">
+            <button onclick="toggleUserMenu()"
+                    class="flex items-center gap-2 text-sm text-gray-300 hover:text-white
+                           px-3 py-1.5 rounded-lg hover:bg-gray-800 transition select-none">
+              <span class="w-6 h-6 rounded-full bg-amber-900 flex items-center justify-center text-xs font-bold text-amber-300">
+                {{ current_user.full_name[0].upper() }}
+              </span>
+              <span class="hidden sm:inline">{{ current_user.full_name.split()[0] }}</span>
+              <span class="text-xs px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-400">
+                {{ current_user.role }}
+              </span>
+              <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="user-menu"
+                 class="hidden absolute right-0 mt-1 w-48 bg-gray-900 border border-gray-700
+                        rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+              <a href="/profile"
+                 class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                <span>👤</span> My Profile
+              </a>
+              {% if current_user.role == 'admin' %}
+              <a href="/settings"
+                 class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                <span>⚙️</span> Settings
+              </a>
+              <a href="/admin/users"
+                 class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                <span>👥</span> Manage Users
+              </a>
+              {% endif %}
+              <div class="border-t border-gray-800 my-1"></div>
+              <a href="/logout"
+                 class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 transition">
+                <span>↩</span> Sign Out
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          <span id="wa-dot" class="w-2 h-2 rounded-full bg-gray-600 flex-shrink-0" title="WhatsApp"></span>
+        </div>
       </div>
     </div>
   </nav>
@@ -79,8 +122,18 @@
   <script>
     fetch('/api/whatsapp/status').then(r=>r.json()).then(d=>{
       const dot=document.getElementById('wa-dot');
-      if(dot) dot.className='w-2 h-2 rounded-full ml-3 flex-shrink-0 '+(d.connected?'bg-green-500':'bg-red-500');
+      if(dot) dot.className='w-2 h-2 rounded-full flex-shrink-0 '+(d.connected?'bg-green-500':'bg-red-500');
     }).catch(()=>{});
+
+    function toggleUserMenu() {
+      document.getElementById('user-menu').classList.toggle('hidden');
+    }
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('user-menu');
+      if (menu && !menu.closest('.relative').contains(e.target)) {
+        menu.classList.add('hidden');
+      }
+    });
   </script>
 </body>
 </html>
