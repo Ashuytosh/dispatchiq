@@ -14,6 +14,20 @@ let isConnected = false;
 let connectedPhone = '';
 let isLoggedOut = false;
 
+// ── AI message-processing state ───────────────────────────────────────────────
+const processedMsgIds = new Set();   // dedup — keep last 50 IDs
+let lastBotReplyTime  = 0;           // timestamp of our last sent reply
+let lastProcessedTime = 0;           // timestamp of last Gemini call (rate limit)
+let consecutiveErrors = 0;           // suppress error replies after 2 in a row
+
+const BOT_REPLY_PREFIXES = ['✅', '❌', '⚠️', '📦', '🚛', '📊', '━', '🤖'];
+const TRIP_KEYWORDS = [
+  'ton', 'tonne', 'mt', 'kg',
+  'steel', 'iron', 'cement', 'coal', 'sand', 'gravel', 'cotton', 'grain',
+  'transport', 'deliver', 'pickup', 'load', 'cargo', 'goods', 'material',
+  'from', 'to', 'se', 'tak', 'bhejo', 'trip', 'gaadi', 'truck',
+];
+
 async function connectToWhatsApp() {
   const baileys = require('baileys');
   const makeWASocket = baileys.default || baileys.makeWASocket || baileys;
@@ -73,32 +87,110 @@ async function connectToWhatsApp() {
 
   sock.ev.on('messages.upsert', async (m) => {
     const msg = m.messages[0];
-    if (!msg.message || msg.key.fromMe) return;
+    if (!msg.message) return;
 
-    const text = msg.message.conversation ||
-                 msg.message.extendedTextMessage?.text || '';
-    if (!text.trim()) return;
+    // Only process direct messages, not groups or newsletters
+    if (msg.key.remoteJid.includes('@g.us') || msg.key.remoteJid.includes('@newsletter')) return;
 
+    const msgId  = msg.key.id;
+    const text   = (msg.message.conversation ||
+                    msg.message.extendedTextMessage?.text || '').trim();
     const sender = msg.key.remoteJid.replace('@s.whatsapp.net', '');
 
-    try {
-      const configRes = await fetch('http://localhost:5000/api/settings/owner-phone');
-      const config = await configRes.json();
-      if (sender !== config.owner_phone) return;
+    console.log('══════════════════════════════════');
+    console.log('📩 MESSAGE RECEIVED');
+    console.log('From:', sender);
+    console.log('Text:', text);
+    console.log('fromMe:', msg.key.fromMe);
+    console.log('══════════════════════════════════');
 
-      console.log(`[WA] AI trip request from owner: ${text.substring(0, 60)}...`);
-      const res = await fetch('http://localhost:5000/api/ai/parse-trip', {
+    if (!text) return;
+
+    // BUG 1 — skip own bot replies (prefix check stops the infinite loop)
+    if (msg.key.fromMe && BOT_REPLY_PREFIXES.some(p => text.startsWith(p))) {
+      console.log('⏭️ Message skipped — reason: own_reply (bot prefix)');
+      return;
+    }
+
+    // BUG 1 — skip if arrived within 2 s of our last sent reply
+    if (Date.now() - lastBotReplyTime < 2000) {
+      console.log('⏭️ Message skipped — reason: own_reply (timing window)');
+      return;
+    }
+
+    // BUG 1 — dedup by message ID
+    if (processedMsgIds.has(msgId)) {
+      console.log('⏭️ Message skipped — reason: duplicate_id');
+      return;
+    }
+
+    // BUG 3 — rate limit: 1 Gemini call per 10 s
+    if (Date.now() - lastProcessedTime < 10000) {
+      console.log('⏭️ Message skipped — reason: cooldown');
+      return;
+    }
+
+    // Only forward messages that look like trip commands
+    const lowerText = text.toLowerCase();
+    if (!TRIP_KEYWORDS.some(kw => lowerText.includes(kw))) {
+      console.log('⏭️ Message skipped — reason: no trip keywords');
+      return;
+    }
+
+    // Mark ID as seen (cap set at 50 entries)
+    processedMsgIds.add(msgId);
+    if (processedMsgIds.size > 50) {
+      processedMsgIds.delete(processedMsgIds.values().next().value);
+    }
+
+    try {
+      // fromMe === true → the connected account sent it, always the owner.
+      // For incoming messages (fromMe=false), compare against stored owner phone.
+      let confirmed = msg.key.fromMe;
+      if (!confirmed) {
+        const configRes = await fetch('http://localhost:5000/api/settings/owner-phone');
+        const config    = await configRes.json();
+        const ownerPhone  = (config.owner_phone || '').replace(/[^0-9]/g, '');
+        const senderClean = sender.replace(/[^0-9]/g, '');
+        confirmed = ownerPhone && senderClean === ownerPhone;
+      }
+
+      if (!confirmed) {
+        console.log(`[WA] Ignoring message from non-owner: ${sender}`);
+        return;
+      }
+
+      lastProcessedTime = Date.now();
+      console.log('🚀 Sending to Flask:', text);
+
+      const res    = await fetch('http://localhost:5000/api/ai/parse-trip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, sender }),
       });
       const result = await res.json();
+      console.log('📬 Flask replied:', JSON.stringify(result));
+
       if (result.reply) {
+        // BUG 4 — suppress error replies after 2 consecutive failures
+        if (!result.success && consecutiveErrors >= 2) {
+          console.log('⏭️ Message skipped — reason: repeated_error (suppressing reply)');
+          consecutiveErrors++;
+          return;
+        }
+
+        lastBotReplyTime = Date.now();
         await sock.sendMessage(msg.key.remoteJid, { text: result.reply });
         console.log('[WA] AI reply sent');
+
+        if (result.success) {
+          consecutiveErrors = 0;   // reset on successful trip creation
+        } else {
+          consecutiveErrors++;
+        }
       }
     } catch (err) {
-      console.log('[WA] AI processing error:', err.message);
+      console.log('❌ Error:', err.message);
     }
   });
 }

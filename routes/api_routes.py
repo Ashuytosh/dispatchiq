@@ -102,10 +102,11 @@ def ai_parse_trip():
             'client_id': result['client_id'],
             'from_location': result['from_location'],
             'to_location': result['to_location'],
-            'goods_description': result.get('goods_description', ''),
+            'goods_description': result.get('goods_description') or '',
             'weight_tons': result.get('weight_tons') or 0,
-            'num_packages': result.get('num_packages') or 0,
+            'num_packages': result.get('num_packages') or 1,
             'freight_amount': result.get('freight_amount') or 0,
+            'advance_paid': 0,
         })
         reply = (f"✅ Trip Created!\n━━━━━━━━━━━━\n"
                  f"Trip #: {trip_id}\nClient: {result['client_match']}\n"
