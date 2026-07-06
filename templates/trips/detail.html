@@ -22,6 +22,8 @@
   {% if trip.status == 'cancelled' %}
     <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-900 text-red-300">Cancelled</span>
   {% endif %}
+  {% set payment_status = trip.payment_status %}
+  {% include 'partials/payment_status_badge.html' with context %}
 </div>
 
 {% if trip.status != 'cancelled' %}
@@ -122,9 +124,13 @@
           <span class="text-gray-500">Advance</span>
           <span class="text-gray-100">{{ trip.advance_paid | money }}</span>
         </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Received</span>
+          <span class="text-gray-100">{{ trip.total_received | money }}</span>
+        </div>
         <div class="border-t border-gray-700 pt-2 flex justify-between font-medium">
           <span class="text-gray-300">Balance Due</span>
-          <span class="text-white">{{ trip.balance_amount | money }}</span>
+          <span class="text-white">{{ (trip.freight_amount - trip.total_received) | money }}</span>
         </div>
       </div>
       {% if trip.invoice_number %}
@@ -237,7 +243,7 @@
   </div>
 </div>
 
-<div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+<div class="bg-gray-900 border border-gray-800 rounded-lg p-5 mb-6">
   <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Activity Log</h2>
   {% if activity %}
   <div class="space-y-3">
@@ -252,5 +258,52 @@
   {% else %}
   <p class="text-gray-500 text-sm">No activity recorded yet.</p>
   {% endif %}
+</div>
+
+<div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Payment History</h2>
+    {% if trip.status != 'cancelled' and trip.payment_status != 'paid' %}
+    <a href="{{ url_for('payments.record_form', trip_id=trip.id) }}"
+       class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded transition">
+      Record Payment
+    </a>
+    {% endif %}
+  </div>
+  {% if payments %}
+  <div class="overflow-x-auto mb-4">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-800 text-gray-400 uppercase text-xs">
+        <tr>
+          <th class="px-4 py-2 text-left">Date</th>
+          <th class="px-4 py-2 text-left">Mode</th>
+          <th class="px-4 py-2 text-left">Reference</th>
+          <th class="px-4 py-2 text-right">Amount</th>
+          <th class="px-4 py-2 text-left">Notes</th>
+          <th class="px-4 py-2 text-left">Recorded By</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-800">
+        {% for p in payments %}
+        <tr>
+          <td class="px-4 py-2 text-gray-300">{{ p.payment_date }}</td>
+          <td class="px-4 py-2 text-gray-300">{{ p.payment_mode | replace('_', ' ') | title }}</td>
+          <td class="px-4 py-2 text-gray-400">{{ p.payment_reference or '—' }}</td>
+          <td class="px-4 py-2 text-right text-gray-200">{{ p.amount | money }}</td>
+          <td class="px-4 py-2 text-gray-400">{{ p.notes or '—' }}</td>
+          <td class="px-4 py-2 text-gray-400">{{ p.recorded_by or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-gray-500 text-sm mb-4">No payments recorded yet.</p>
+  {% endif %}
+  <div class="flex justify-between border-t border-gray-700 pt-3 text-sm">
+    <span class="text-gray-500">Total Freight: <span class="text-gray-200">{{ trip.freight_amount | money }}</span></span>
+    <span class="text-gray-500">Paid So Far: <span class="text-gray-200">{{ trip.total_received | money }}</span></span>
+    <span class="text-gray-500">Remaining: <span class="text-white font-medium">{{ (trip.freight_amount - trip.total_received) | money }}</span></span>
+  </div>
 </div>
 {% endblock %}

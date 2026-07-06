@@ -1,0 +1,8 @@
+{% set badge_classes = {
+  'unpaid':  'bg-red-900 text-red-300',
+  'partial': 'bg-yellow-900 text-yellow-300',
+  'paid':    'bg-emerald-900 text-emerald-300',
+} %}
+<span class="px-2 py-1 rounded-full text-xs font-medium {{ badge_classes.get(payment_status, 'bg-gray-700 text-gray-300') }}">
+  {{ payment_status | replace('_', ' ') | title }}
+</span>

@@ -10,7 +10,7 @@
   </a>
 </div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
   <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
     <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total Active Trips</p>
     <p class="text-3xl font-bold text-white">{{ stats.active }}</p>
@@ -26,6 +26,10 @@
   <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
     <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">This Month Revenue</p>
     <p class="text-3xl font-bold text-blue-400">{{ stats.month_revenue | money }}</p>
+  </div>
+  <div class="bg-gray-900 rounded-lg p-5 border border-gray-800">
+    <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pending Dues</p>
+    <p class="text-3xl font-bold text-red-400">{{ payment_summary.total_pending | money }}</p>
   </div>
 </div>
 

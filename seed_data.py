@@ -16,6 +16,7 @@ def seed() -> None:
         _seed_settings(db)
         _seed_trips(db)
         db.commit()
+        _seed_payments()
         _seed_admin_user()
         print("Seed data inserted successfully.")
     except Exception as e:
@@ -210,6 +211,43 @@ def _seed_trips(db: sqlite3.Connection) -> None:
             "INSERT INTO activity_log (trip_id, action, message) VALUES (?,?,?)",
             (trip_id, actions.get(status, status.upper()), f"Seed data: trip in {status} status"),
         )
+
+
+def _seed_payments() -> None:
+    from models.database import get_db, close_db
+    from models import payment as payment_model
+
+    db = get_db()
+    try:
+        lr_to_id = {row[0]: row[1] for row in db.execute(
+            "SELECT lr_number, id FROM trips WHERE lr_number IS NOT NULL"
+        ).fetchall()}
+    finally:
+        close_db(db)
+
+    # Tata Steel Ltd, LR-2026-0001: freight 42000, advance 20000 -> paid in full.
+    tata_id = lr_to_id.get("LR-2026-0001")
+    if tata_id:
+        payment_model.create_payment(tata_id, 20000, "bank_transfer", "TXN-SEED-001",
+                                      "01-06-2026", "Advance at booking", "Seed Script")
+        payment_model.create_payment(tata_id, 22000, "bank_transfer", "TXN-SEED-002",
+                                      "05-06-2026", "Balance on delivery", "Seed Script")
+
+    # JSW Steel Ltd, LR-2026-0002: freight 28000, advance 15000 -> paid in full.
+    jsw_id = lr_to_id.get("LR-2026-0002")
+    if jsw_id:
+        payment_model.create_payment(jsw_id, 15000, "upi", "UPI-SEED-001",
+                                      "05-06-2026", "Advance at booking", "Seed Script")
+        payment_model.create_payment(jsw_id, 13000, "bank_transfer", "TXN-SEED-003",
+                                      "09-06-2026", "Balance on delivery", "Seed Script")
+
+    # Ambuja Cements, LR-2026-0007: freight 15000, advance 8000 already recorded -> partial.
+    ambuja_id = lr_to_id.get("LR-2026-0007")
+    if ambuja_id:
+        payment_model.create_payment(ambuja_id, 8000, "cash", None,
+                                      "10-06-2026", "Advance at booking", "Seed Script")
+
+    # All other seeded trips get zero payments; ALTER TABLE defaults cover total_received/payment_status.
 
 
 def _seed_admin_user() -> None:

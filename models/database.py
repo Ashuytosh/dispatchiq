@@ -87,6 +87,19 @@ def init_db() -> None:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trip_id INTEGER NOT NULL REFERENCES trips(id),
+                amount REAL NOT NULL,
+                payment_mode TEXT NOT NULL
+                    CHECK(payment_mode IN ('cash', 'bank_transfer', 'upi', 'cheque')),
+                payment_reference TEXT,
+                payment_date TEXT NOT NULL,
+                notes TEXT,
+                recorded_by TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             CREATE TABLE IF NOT EXISTS settings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 key TEXT NOT NULL UNIQUE,
@@ -108,5 +121,16 @@ def init_db() -> None:
             );
         """)
         db.commit()
+
+        for alter_sql in (
+            "ALTER TABLE trips ADD COLUMN total_received REAL DEFAULT 0",
+            "ALTER TABLE trips ADD COLUMN payment_status TEXT DEFAULT 'unpaid'",
+        ):
+            try:
+                db.execute(alter_sql)
+                db.commit()
+            except sqlite3.OperationalError as e:
+                if "duplicate column" not in str(e).lower():
+                    raise
     finally:
         close_db(db)

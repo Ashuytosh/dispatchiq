@@ -7,6 +7,7 @@ from models import vehicle as vehicle_model
 from models import driver as driver_model
 from models import client as client_model
 from models import document as document_model
+from models import payment as payment_model
 from services import trip_service
 from services import lr_generator
 from services import invoice_generator
@@ -53,9 +54,11 @@ def detail(trip_id: int):
     activity = trip_model.get_trip_activity(trip_id)
     available_vehicles = vehicle_model.get_available_vehicles()
     available_drivers = driver_model.get_available_drivers()
+    payments = payment_model.get_payments_for_trip(trip_id)
     return render_template('trips/detail.html', trip=trip, activity=activity,
                            available_vehicles=available_vehicles,
-                           available_drivers=available_drivers)
+                           available_drivers=available_drivers,
+                           payments=payments)
 
 
 @trips_bp.route('/<int:trip_id>/assign', methods=['POST'])

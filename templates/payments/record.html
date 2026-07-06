@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Record Payment — DispatchIQ{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-6">
+  <a href="{{ url_for('payments.list_payments') }}" class="text-gray-400 hover:text-white text-sm">← Payments</a>
+  <h1 class="text-2xl font-bold text-white">Record Payment</h1>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="space-y-6">
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Trip Information</h2>
+      <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+        <div>
+          <p class="text-gray-500 text-xs">LR Number</p>
+          <p class="text-blue-400 font-mono">{{ trip.lr_number or '—' }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500 text-xs">Client</p>
+          <p class="text-gray-100">{{ trip.client_name or '—' }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500 text-xs">From → To</p>
+          <p class="text-gray-100">{{ trip.from_location }} → {{ trip.to_location }}</p>
+        </div>
+        <div>
+          <p class="text-gray-500 text-xs">Freight</p>
+          <p class="text-gray-100">{{ trip.freight_amount | money }}</p>
+        </div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-700">
+        <p class="text-gray-500 text-xs">Remaining Balance</p>
+        <p class="text-2xl font-bold text-white">{{ remaining | money }}</p>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Previous Payments</h2>
+      {% if payments %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="text-gray-500 uppercase">
+            <tr>
+              <th class="py-1.5 text-left">Date</th>
+              <th class="py-1.5 text-left">Mode</th>
+              <th class="py-1.5 text-left">Reference</th>
+              <th class="py-1.5 text-right">Amount</th>
+              <th class="py-1.5 text-left">Notes</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800">
+            {% for p in payments %}
+            <tr>
+              <td class="py-1.5 text-gray-300">{{ p.payment_date }}</td>
+              <td class="py-1.5 text-gray-300">{{ p.payment_mode | replace('_', ' ') | title }}</td>
+              <td class="py-1.5 text-gray-400">{{ p.payment_reference or '—' }}</td>
+              <td class="py-1.5 text-right text-gray-200">{{ p.amount | money }}</td>
+              <td class="py-1.5 text-gray-400">{{ p.notes or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-gray-500 text-sm">No payments recorded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Record Payment</h2>
+    <form method="POST" action="{{ url_for('payments.record', trip_id=trip.id) }}" class="space-y-4">
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Amount (₹)</label>
+        <input type="number" name="amount" required min="0.01" max="{{ remaining }}" step="0.01"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Payment Mode</label>
+        <select name="payment_mode" id="payment_mode" required
+                class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+          <option value="cash">Cash</option>
+          <option value="bank_transfer">Bank Transfer</option>
+          <option value="upi">UPI</option>
+          <option value="cheque">Cheque</option>
+        </select>
+      </div>
+      <div id="ref-field" class="hidden">
+        <label class="block text-xs text-gray-400 mb-1">Payment Reference</label>
+        <input type="text" name="payment_reference" placeholder="UTR / Cheque number"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Payment Date</label>
+        <input type="text" name="payment_date" required value="{{ today }}" placeholder="DD-MM-YYYY"
+               pattern="\d{2}-\d{2}-\d{4}"
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Notes</label>
+        <textarea name="notes" rows="3"
+                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500"></textarea>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded transition">
+        Record Payment
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('payment_mode').addEventListener('change', function(e) {
+    document.getElementById('ref-field').classList.toggle('hidden', e.target.value === 'cash');
+  });
+</script>
+{% endblock %}

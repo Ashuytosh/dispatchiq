@@ -14,46 +14,62 @@
         <a href="/" class="text-white font-bold text-lg tracking-tight">
           🚚 DispatchIQ
         </a>
-        <div class="flex space-x-1">
-          {% set nav = [
-            ('dashboard.index', '/'),
-            ('trips.list_trips', '/trips'),
-            ('vehicles.list_vehicles', '/vehicles'),
-            ('drivers.list_drivers', '/drivers'),
-            ('clients.list_clients', '/clients'),
-            ('settings.index', '/settings'),
-          ] %}
-          {% set labels = {
-            'dashboard.index': 'Dashboard',
-            'trips.list_trips': 'Trips',
-            'vehicles.list_vehicles': 'Vehicles',
-            'drivers.list_drivers': 'Drivers',
-            'clients.list_clients': 'Clients',
-            'settings.index': 'Settings',
-          } %}
-          {% for endpoint, path in nav %}
-            {% if request.endpoint == endpoint or request.path.startswith(path) and path != '/' %}
+        <div class="flex space-x-1 items-center">
+          {% macro nav_link(endpoint, path, label) %}
+            {% if request.endpoint == endpoint or (request.path.startswith(path) and path != '/') %}
               <a href="{{ url_for(endpoint) }}"
                  class="px-3 py-2 rounded text-sm font-medium bg-gray-800 text-white">
-                {{ labels[endpoint] }}
+                {{ label }}
               </a>
             {% elif endpoint == 'dashboard.index' and request.path == '/' %}
               <a href="{{ url_for(endpoint) }}"
                  class="px-3 py-2 rounded text-sm font-medium bg-gray-800 text-white">
-                {{ labels[endpoint] }}
+                {{ label }}
               </a>
             {% else %}
               <a href="{{ url_for(endpoint) }}"
                  class="px-3 py-2 rounded text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition">
-                {{ labels[endpoint] }}
+                {{ label }}
               </a>
             {% endif %}
-          {% endfor %}
+          {% endmacro %}
+
+          {{ nav_link('dashboard.index', '/', 'Dashboard') }}
+          {{ nav_link('trips.list_trips', '/trips', 'Trips') }}
+
+          <div class="relative">
+            <button data-menu-toggle="payments-menu"
+                    class="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium
+                           {% if request.path.startswith('/payments') %}bg-gray-800 text-white
+                           {% else %}text-gray-400 hover:text-white hover:bg-gray-800{% endif %} transition">
+              Payments
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="payments-menu"
+                 class="js-dropdown-menu hidden absolute left-0 mt-1 w-44 bg-gray-900 border border-gray-700
+                        rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+              <a href="{{ url_for('payments.list_payments') }}"
+                 class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                All Payments
+              </a>
+              <a href="{{ url_for('payments.dues') }}"
+                 class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                Client Dues
+              </a>
+            </div>
+          </div>
+
+          {{ nav_link('vehicles.list_vehicles', '/vehicles', 'Vehicles') }}
+          {{ nav_link('drivers.list_drivers', '/drivers', 'Drivers') }}
+          {{ nav_link('clients.list_clients', '/clients', 'Clients') }}
+          {{ nav_link('settings.index', '/settings', 'Settings') }}
         </div>
         <div class="flex items-center gap-3 ml-4">
           {% if current_user %}
           <div class="relative">
-            <button onclick="toggleUserMenu()"
+            <button data-menu-toggle="user-menu"
                     class="flex items-center gap-2 text-sm text-gray-300 hover:text-white
                            px-3 py-1.5 rounded-lg hover:bg-gray-800 transition select-none">
               <span class="w-6 h-6 rounded-full bg-amber-900 flex items-center justify-center text-xs font-bold text-amber-300">
@@ -68,7 +84,7 @@
               </svg>
             </button>
             <div id="user-menu"
-                 class="hidden absolute right-0 mt-1 w-48 bg-gray-900 border border-gray-700
+                 class="js-dropdown-menu hidden absolute right-0 mt-1 w-48 bg-gray-900 border border-gray-700
                         rounded-xl shadow-xl z-50 py-1 overflow-hidden">
               <a href="/profile"
                  class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition">
@@ -125,14 +141,22 @@
       if(dot) dot.className='w-2 h-2 rounded-full flex-shrink-0 '+(d.connected?'bg-green-500':'bg-red-500');
     }).catch(()=>{});
 
-    function toggleUserMenu() {
-      document.getElementById('user-menu').classList.toggle('hidden');
-    }
+    document.querySelectorAll('[data-menu-toggle]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const menu = document.getElementById(btn.dataset.menuToggle);
+        document.querySelectorAll('.js-dropdown-menu').forEach(function(m) {
+          if (m !== menu) m.classList.add('hidden');
+        });
+        menu.classList.toggle('hidden');
+      });
+    });
     document.addEventListener('click', function(e) {
-      const menu = document.getElementById('user-menu');
-      if (menu && !menu.closest('.relative').contains(e.target)) {
-        menu.classList.add('hidden');
-      }
+      document.querySelectorAll('.js-dropdown-menu').forEach(function(m) {
+        if (!m.closest('.relative').contains(e.target)) {
+          m.classList.add('hidden');
+        }
+      });
     });
   </script>
 </body>
