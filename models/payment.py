@@ -143,6 +143,23 @@ def get_payment_summary() -> dict:
         close_db(db)
 
 
+def get_top_clients_by_revenue(limit: int = 5) -> list[sqlite3.Row]:
+    db = get_db()
+    try:
+        return db.execute("""
+            SELECT c.id as client_id, c.name as client_name,
+                   COALESCE(SUM(t.freight_amount), 0) as total_freight
+            FROM clients c
+            JOIN trips t ON t.client_id = c.id
+            WHERE t.status != 'cancelled'
+            GROUP BY c.id, c.name
+            ORDER BY total_freight DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+    finally:
+        close_db(db)
+
+
 def delete_payment(payment_id: int) -> None:
     db = get_db()
     try:

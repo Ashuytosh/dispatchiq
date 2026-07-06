@@ -77,4 +77,166 @@
   </div>
   {% endif %}
 </div>
+
+<div class="mt-8">
+  <h2 class="text-lg font-bold text-white mb-4">📊 Analytics</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h3 class="text-sm font-semibold text-gray-200 uppercase tracking-wide mb-3">Monthly Revenue</h3>
+      <div class="relative h-64">
+        <div id="spinner-monthly-revenue" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+        <div id="error-monthly-revenue" class="absolute inset-0 hidden items-center justify-center text-gray-500 text-sm">Charts unavailable</div>
+        <canvas id="chart-monthly-revenue" class="hidden"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h3 class="text-sm font-semibold text-gray-200 uppercase tracking-wide mb-3">Trips by Status</h3>
+      <div class="relative h-64">
+        <div id="spinner-trips-status" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+        <div id="error-trips-status" class="absolute inset-0 hidden items-center justify-center text-gray-500 text-sm">Charts unavailable</div>
+        <canvas id="chart-trips-status" class="hidden"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h3 class="text-sm font-semibold text-gray-200 uppercase tracking-wide mb-3">Top 5 Clients by Revenue</h3>
+      <div class="relative h-64">
+        <div id="spinner-top-clients" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+        <div id="error-top-clients" class="absolute inset-0 hidden items-center justify-center text-gray-500 text-sm">Charts unavailable</div>
+        <canvas id="chart-top-clients" class="hidden"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h3 class="text-sm font-semibold text-gray-200 uppercase tracking-wide mb-3">Daily Trip Count (Last 30 Days)</h3>
+      <div class="relative h-64">
+        <div id="spinner-daily-trips" class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+        <div id="error-daily-trips" class="absolute inset-0 hidden items-center justify-center text-gray-500 text-sm">Charts unavailable</div>
+        <canvas id="chart-daily-trips" class="hidden"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  Chart.defaults.color = '#9CA3AF';
+  Chart.defaults.borderColor = '#374151';
+
+  const CLIENT_PALETTE = ['#3B82F6', '#22C55E', '#EAB308', '#A855F7', '#F97316'];
+
+  function formatINR(value) {
+    const n = Math.round(Number(value) || 0);
+    const s = Math.abs(n).toString();
+    const last3 = s.slice(-3);
+    const rest = s.slice(0, -3);
+    const grouped = rest ? rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + last3 : last3;
+    return (n < 0 ? '-₹' : '₹') + grouped;
+  }
+
+  const centerTextPlugin = {
+    id: 'centerText',
+    afterDraw(chart) {
+      const total = chart.config._centerTotal ?? chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+      const { ctx, chartArea: { left, right, top, bottom } } = chart;
+      const cx = (left + right) / 2, cy = (top + bottom) / 2;
+      ctx.save();
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillStyle = '#F9FAFB';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(total), cx, cy - 8);
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#9CA3AF';
+      ctx.fillText('Total Trips', cx, cy + 14);
+      ctx.restore();
+    }
+  };
+
+  function showChart(key) {
+    document.getElementById('spinner-' + key).classList.add('hidden');
+    document.getElementById('chart-' + key).classList.remove('hidden');
+  }
+  function showAllErrors() {
+    ['monthly-revenue', 'trips-status', 'top-clients', 'daily-trips'].forEach(function (key) {
+      document.getElementById('spinner-' + key).classList.add('hidden');
+      const err = document.getElementById('error-' + key);
+      err.classList.remove('hidden');
+      err.classList.add('flex');
+    });
+  }
+
+  fetch('/api/dashboard/charts')
+    .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
+    .then(function (data) {
+      try {
+        new Chart(document.getElementById('chart-monthly-revenue'), {
+          type: 'bar',
+          data: {
+            labels: data.monthly_revenue.labels,
+            datasets: [{ label: 'Revenue', data: data.monthly_revenue.data, backgroundColor: '#D97706' }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false },
+              tooltip: { callbacks: { label: function (ctx) { return formatINR(ctx.parsed.y); } } } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+        showChart('monthly-revenue');
+
+        const statusChart = new Chart(document.getElementById('chart-trips-status'), {
+          type: 'doughnut',
+          data: {
+            labels: data.trips_by_status.labels,
+            datasets: [{ data: data.trips_by_status.data, backgroundColor: data.trips_by_status.colors }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } },
+          plugins: [centerTextPlugin]
+        });
+        statusChart.config._centerTotal = data.trips_by_status.data.reduce(function (a, b) { return a + b; }, 0);
+        statusChart.update();
+        showChart('trips-status');
+
+        new Chart(document.getElementById('chart-top-clients'), {
+          type: 'bar',
+          data: {
+            labels: data.top_clients.labels,
+            datasets: [{ data: data.top_clients.data,
+              backgroundColor: data.top_clients.labels.map(function (_, i) { return CLIENT_PALETTE[i % CLIENT_PALETTE.length]; }) }]
+          },
+          options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false },
+              tooltip: { callbacks: { label: function (ctx) { return formatINR(ctx.parsed.x); } } } },
+            scales: { x: { beginAtZero: true } }
+          }
+        });
+        showChart('top-clients');
+
+        new Chart(document.getElementById('chart-daily-trips'), {
+          type: 'line',
+          data: {
+            labels: data.daily_trips.labels,
+            datasets: [{ label: 'Trips', data: data.daily_trips.data,
+              borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#F59E0B' }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+          }
+        });
+        showChart('daily-trips');
+      } catch (e) {
+        showAllErrors();
+      }
+    })
+    .catch(function () { showAllErrors(); });
+})();
+</script>
 {% endblock %}

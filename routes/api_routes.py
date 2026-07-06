@@ -3,6 +3,7 @@ from models import trip as trip_model
 from models import vehicle as vehicle_model
 from models import client as client_model
 from services import trip_service
+from services import analytics_service
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -62,6 +63,12 @@ def get_clients():
 def get_stats():
     stats = trip_service.get_dashboard_stats()
     return jsonify(stats)
+
+
+@api_bp.route('/dashboard/charts', methods=['GET'])
+def get_dashboard_charts():
+    data = analytics_service.get_dashboard_chart_data()
+    return jsonify(data)
 
 
 @api_bp.route('/whatsapp/status', methods=['GET'])

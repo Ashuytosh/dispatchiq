@@ -193,6 +193,36 @@ def get_trip_stats() -> dict[str, int]:
         close_db(db)
 
 
+def get_monthly_revenue_trend(months: int = 6) -> list[sqlite3.Row]:
+    db = get_db()
+    try:
+        return db.execute("""
+            SELECT strftime('%Y-%m', paid_at) as ym,
+                   COALESCE(SUM(freight_amount), 0) as total_revenue
+            FROM trips
+            WHERE status = 'paid'
+              AND paid_at >= date('now', ?, 'start of month')
+            GROUP BY ym
+            ORDER BY ym
+        """, (f'-{months - 1} months',)).fetchall()
+    finally:
+        close_db(db)
+
+
+def get_daily_trip_counts(days: int = 30) -> list[sqlite3.Row]:
+    db = get_db()
+    try:
+        return db.execute("""
+            SELECT DATE(created_at) as day, COUNT(*) as trip_count
+            FROM trips
+            WHERE DATE(created_at) >= date('now', ?)
+            GROUP BY day
+            ORDER BY day
+        """, (f'-{days - 1} days',)).fetchall()
+    finally:
+        close_db(db)
+
+
 def generate_lr_number() -> str:
     year = datetime.now().year
     db = get_db()
