@@ -2,7 +2,13 @@
 {% block title %}Client Dues — DispatchIQ{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold text-white mb-6">Client Dues</h1>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-white">Client Dues</h1>
+  <a href="{{ url_for('payments.export_dues') }}"
+     class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+    📥 Export Dues Report
+  </a>
+</div>
 
 <div class="bg-red-950 border border-red-800 rounded-lg p-6 mb-8 text-center">
   <p class="text-red-300 text-sm uppercase tracking-wide mb-1">Total Pending</p>

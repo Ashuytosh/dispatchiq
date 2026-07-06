@@ -1,8 +1,10 @@
+import os
 from datetime import date
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file
 from models import payment as payment_model
 from models import trip as trip_model
 from models import client as client_model
+from services import export_service
 from services.auth import login_required, get_current_user
 
 payment_bp = Blueprint('payments', __name__, url_prefix='/payments')
@@ -23,6 +25,19 @@ def list_payments():
                            selected_status=status, selected_client=client_id, summary=summary)
 
 
+@payment_bp.route('/export')
+@login_required
+def export_payments():
+    status = request.args.get('status', '')
+    client_id = request.args.get('client_id', '')
+    file_path = export_service.export_trips_to_excel(
+        filters={'status': status, 'client_id': client_id}
+    )
+    return send_file(file_path, as_attachment=True,
+                     download_name=os.path.basename(file_path),
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
 @payment_bp.route('/dues')
 @login_required
 def dues():
@@ -33,6 +48,15 @@ def dues():
         for row in dues_list
     ]
     return render_template('payments/dues.html', dues=dues_with_trips, summary=summary)
+
+
+@payment_bp.route('/dues/export')
+@login_required
+def export_dues():
+    file_path = export_service.export_dues_to_excel()
+    return send_file(file_path, as_attachment=True,
+                     download_name=os.path.basename(file_path),
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
 @payment_bp.route('/record/<int:trip_id>', methods=['GET'])

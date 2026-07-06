@@ -4,10 +4,16 @@
 {% block content %}
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-2xl font-bold text-white">Trips</h1>
-  <a href="{{ url_for('trips.create_form') }}"
-     class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition">
-    + New Trip
-  </a>
+  <div class="flex gap-2">
+    <a href="{{ url_for('trips.export', status=selected_status, client_id=selected_client) }}"
+       class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+      📥 Export to Excel
+    </a>
+    <a href="{{ url_for('trips.create_form') }}"
+       class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition">
+      + New Trip
+    </a>
+  </div>
 </div>
 
 <form method="GET" class="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6 flex flex-wrap gap-3 items-end">

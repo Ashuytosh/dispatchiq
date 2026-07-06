@@ -219,6 +219,24 @@ def generate_invoice_number() -> str:
         close_db(db)
 
 
+def get_trips_by_month(month: int, year: int) -> list[sqlite3.Row]:
+    db = get_db()
+    try:
+        return db.execute(
+            """SELECT t.*, c.name as client_name,
+                      v.plate_number, d.name as driver_name
+               FROM trips t
+               LEFT JOIN clients c ON t.client_id = c.id
+               LEFT JOIN vehicles v ON t.vehicle_id = v.id
+               LEFT JOIN drivers d ON t.driver_id = d.id
+               WHERE strftime('%m', t.created_at) = ? AND strftime('%Y', t.created_at) = ?
+               ORDER BY t.created_at""",
+            (f"{month:02d}", str(year)),
+        ).fetchall()
+    finally:
+        close_db(db)
+
+
 def get_trip_activity(trip_id: int) -> list[sqlite3.Row]:
     db = get_db()
     try:

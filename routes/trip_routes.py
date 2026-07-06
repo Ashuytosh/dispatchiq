@@ -11,6 +11,8 @@ from models import payment as payment_model
 from services import trip_service
 from services import lr_generator
 from services import invoice_generator
+from services import export_service
+from services.auth import login_required
 
 trips_bp = Blueprint('trips', __name__, url_prefix='/trips')
 
@@ -26,6 +28,19 @@ def list_trips():
     clients = client_model.get_all_clients()
     return render_template('trips/list.html', trips=trips, clients=clients,
                            selected_status=status, selected_client=client_id)
+
+
+@trips_bp.route('/export')
+@login_required
+def export():
+    status = request.args.get('status', '')
+    client_id = request.args.get('client_id', '')
+    file_path = export_service.export_trips_to_excel(
+        filters={'status': status, 'client_id': client_id}
+    )
+    return send_file(file_path, as_attachment=True,
+                     download_name=os.path.basename(file_path),
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
 @trips_bp.route('/create', methods=['GET'])

@@ -3,3 +3,4 @@ reportlab
 apscheduler
 requests
 google-genai
+openpyxl
