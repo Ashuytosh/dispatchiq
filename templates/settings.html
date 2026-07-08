@@ -220,9 +220,22 @@
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Integrations</h2>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Traccar Server URL</label>
-        <input type="url" name="traccar_url" value="{{ settings.get('traccar_url', '') }}"
-               placeholder="e.g. http://traccar.example.com:8082"
+        <input type="url" name="traccar_url" id="traccar_url" value="{{ settings.get('traccar_url', '') }}"
+               placeholder="e.g. https://demo.traccar.org"
                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Username / Email</label>
+          <input type="text" name="traccar_username" id="traccar_username" value="{{ settings.get('traccar_username', '') }}"
+                 placeholder="admin"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Password</label>
+          <input type="password" name="traccar_password" id="traccar_password" value="{{ settings.get('traccar_password', '') }}"
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <input type="checkbox" name="traccar_enabled" id="traccar_enabled" value="1"
@@ -230,6 +243,13 @@
                class="w-4 h-4 bg-gray-800 border-gray-600 rounded">
         <label for="traccar_enabled" class="text-sm text-gray-300">Enable Traccar GPS tracking</label>
       </div>
+      <div>
+        <button type="button" onclick="testTraccarConnection()"
+                class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+          🔗 Test Connection
+        </button>
+      </div>
+      <div id="traccar-result" class="hidden text-sm rounded p-3 border"></div>
     </div>
 
     <div class="flex justify-end">
@@ -265,6 +285,43 @@ function testSummary() {
       pre.textContent = d.success ? d.summary : '❌ ' + d.summary;
     })
     .catch(() => { pre.textContent = '❌ Request failed.'; });
+}
+
+function testTraccarConnection() {
+  const result = document.getElementById('traccar-result');
+  const url = document.getElementById('traccar_url').value.trim();
+  const username = document.getElementById('traccar_username').value.trim();
+  const password = document.getElementById('traccar_password').value;
+
+  result.className = 'text-sm rounded p-3 border border-gray-700 bg-gray-800 text-gray-300';
+  result.textContent = '⏳ Testing connection…';
+
+  fetch('/api/settings/test-traccar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: url, username: username, password: password }),
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        result.className = 'text-sm rounded p-3 border border-red-700 bg-red-900 text-red-200';
+        result.textContent = '❌ ' + (d.error || 'Connection failed.');
+        return;
+      }
+      result.className = 'text-sm rounded p-3 border border-emerald-700 bg-emerald-900 text-emerald-200';
+      let html = '✅ Connected! Found ' + d.devices + ' device(s).<br>' +
+        'Matching vehicles in DispatchIQ: ' + d.matched_count + ' out of ' + d.vehicle_count + '.';
+      if (d.matched_plates && d.matched_plates.length) {
+        html += '<br><span class="text-emerald-300">' + d.matched_plates.join(', ') + '</span>';
+      } else {
+        html += '<br><span class="text-yellow-400">No matching plate numbers found — check device naming in Traccar.</span>';
+      }
+      result.innerHTML = html;
+    })
+    .catch(() => {
+      result.className = 'text-sm rounded p-3 border border-red-700 bg-red-900 text-red-200';
+      result.textContent = '❌ Request failed.';
+    });
 }
 
 (function () {

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Fleet Map — DispatchIQ{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>#fleet-map { height: 70vh; width: 100%; }</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+  <h1 class="text-2xl font-bold text-white">🗺️ Fleet Map</h1>
+  {% if configured %}
+  <div class="flex items-center gap-4 text-sm text-gray-400">
+    <span><span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-1"></span>Moving: <span id="count-moving">0</span></span>
+    <span><span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-1"></span>Stopped: <span id="count-stopped">0</span></span>
+    <span>📍 Total: <span id="count-total">0</span></span>
+    <span>Updated: <span id="last-updated">—</span></span>
+  </div>
+  {% endif %}
+</div>
+
+{% if not configured %}
+<div class="bg-gray-900 border border-gray-800 rounded-lg p-10 text-center text-gray-400">
+  <p class="text-lg mb-2">GPS tracking not configured.</p>
+  <p class="text-sm">Go to
+    <a href="{{ url_for('settings.index') }}" class="text-blue-400 hover:underline">Settings</a>
+    to connect your Traccar server.
+  </p>
+</div>
+{% else %}
+<div id="fleet-map" class="rounded-lg border border-gray-800"></div>
+<script>
+const map = L.map('fleet-map').setView([20.5937, 78.9629], 5);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  maxZoom: 19,
+}).addTo(map);
+
+const markers = {};
+
+function markerColor(speed) { return speed > 0 ? '#22c55e' : '#ef4444'; }
+
+function popupHtml(p) {
+  const updated = p.last_update ? new Date(p.last_update).toLocaleString() : '—';
+  return `<div class="text-sm"><b>${p.device_name}</b><br>Speed: ${p.speed_kmh} km/h<br>Updated: ${updated}` +
+    `<br><a href="/map/vehicle/${encodeURIComponent(p.device_name)}" class="text-blue-500">View details</a></div>`;
+}
+
+function refresh() {
+  fetch('/api/map/positions').then(r => r.json()).then(positions => {
+    let moving = 0, stopped = 0;
+    const seen = new Set();
+    positions.forEach(p => {
+      if (p.latitude == null || p.longitude == null) return;
+      seen.add(p.device_name);
+      const color = markerColor(p.speed_kmh);
+      if (p.speed_kmh > 0) moving++; else stopped++;
+      if (markers[p.device_name]) {
+        markers[p.device_name].setLatLng([p.latitude, p.longitude]);
+        markers[p.device_name].setStyle({ fillColor: color, color: color });
+        markers[p.device_name].setPopupContent(popupHtml(p));
+      } else {
+        const m = L.circleMarker([p.latitude, p.longitude], {
+          radius: 8, fillColor: color, color: color, fillOpacity: 0.85, weight: 2,
+        }).addTo(map);
+        m.bindPopup(popupHtml(p));
+        m.bindTooltip(p.device_name, { permanent: false, direction: 'top' });
+        markers[p.device_name] = m;
+      }
+    });
+    Object.keys(markers).forEach(name => {
+      if (!seen.has(name)) { map.removeLayer(markers[name]); delete markers[name]; }
+    });
+    document.getElementById('count-moving').textContent = moving;
+    document.getElementById('count-stopped').textContent = stopped;
+    document.getElementById('count-total').textContent = positions.length;
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+  }).catch(() => {});
+}
+
+refresh();
+setInterval(refresh, 30000);
+</script>
+{% endif %}
+{% endblock %}

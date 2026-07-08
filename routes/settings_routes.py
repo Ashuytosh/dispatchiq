@@ -13,7 +13,7 @@ SETTINGS_KEYS = [
     'whatsapp_enabled', 'whatsapp_owner_phone', 'daily_summary_time',
     'notify_on_dispatched', 'notify_on_delivered', 'notify_on_invoiced', 'notify_on_paid',
     'gemini_api_key', 'ai_trip_creation_enabled',
-    'traccar_url', 'traccar_enabled',
+    'traccar_url', 'traccar_enabled', 'traccar_username', 'traccar_password',
 ]
 
 

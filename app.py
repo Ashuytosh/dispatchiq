@@ -12,6 +12,7 @@ from routes.settings_routes import settings_bp
 from routes.api_routes import api_bp
 from routes.auth_routes import auth_bp
 from routes.admin_routes import admin_bp
+from routes.map_routes import map_bp
 
 
 def _fmt_date(value: str | None) -> str:
@@ -57,6 +58,7 @@ def create_app() -> Flask:
     app.register_blueprint(clients_bp)
     app.register_blueprint(settings_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(map_bp)
 
     @app.before_request
     def require_login():

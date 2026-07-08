@@ -90,6 +90,8 @@ def _seed_settings(db: sqlite3.Connection) -> None:
         ("whatsapp_enabled", "false"),
         ("traccar_enabled", "false"),
         ("traccar_url", ""),
+        ("traccar_username", ""),
+        ("traccar_password", ""),
         ("daily_summary_time", "08:00"),
     ]
     db.executemany(

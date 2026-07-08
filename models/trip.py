@@ -267,6 +267,19 @@ def get_trips_by_month(month: int, year: int) -> list[sqlite3.Row]:
         close_db(db)
 
 
+def get_active_trip_by_vehicle_id(vehicle_id: int) -> Optional[sqlite3.Row]:
+    db = get_db()
+    try:
+        return db.execute(
+            """SELECT * FROM trips
+               WHERE vehicle_id = ? AND status IN ('dispatched', 'in_transit')
+               ORDER BY id DESC LIMIT 1""",
+            (vehicle_id,),
+        ).fetchone()
+    finally:
+        close_db(db)
+
+
 def get_trip_activity(trip_id: int) -> list[sqlite3.Row]:
     db = get_db()
     try:

@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Trip {{ trip.lr_number or '#' + trip.id|string }} — DispatchIQ{% endblock %}
 
+{% block extra_head %}
+{% if traccar_configured and trip.status in ['dispatched', 'in_transit'] and trip.plate_number %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endif %}
+{% endblock %}
+
 {% block content %}
 {% set stages = ['created','assigned','dispatched','in_transit','delivered','invoiced','paid'] %}
 {% set stage_labels = {
@@ -137,6 +144,43 @@
       <p class="mt-3 text-xs text-gray-500">Invoice: <span class="text-purple-400 font-mono">{{ trip.invoice_number }}</span></p>
       {% endif %}
     </div>
+
+    {% if traccar_configured and trip.status in ['dispatched', 'in_transit'] and trip.plate_number %}
+    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Live Location</h2>
+      <div id="trip-mini-map" style="height:300px;" class="rounded"></div>
+      <p class="text-xs text-gray-500 mt-2">{{ trip.from_location }} → {{ trip.to_location }}</p>
+      <p class="text-sm text-gray-300 mt-1" id="trip-map-status">Loading position…</p>
+    </div>
+    <script>
+    (function() {
+      const plate = {{ trip.plate_number | tojson }};
+      const map = L.map('trip-mini-map').setView([20.5937, 78.9629], 5);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+      let marker = null;
+
+      function refresh() {
+        fetch('/api/map/vehicle/' + encodeURIComponent(plate)).then(function(r) {
+          if (!r.ok) throw new Error('unavailable');
+          return r.json();
+        }).then(function(p) {
+          if (marker) {
+            marker.setLatLng([p.latitude, p.longitude]);
+          } else {
+            marker = L.circleMarker([p.latitude, p.longitude], { radius: 8, fillColor: '#22c55e', color: '#22c55e', fillOpacity: 0.85 }).addTo(map);
+            map.setView([p.latitude, p.longitude], 13);
+          }
+          const updated = p.last_update ? new Date(p.last_update).toLocaleString() : '—';
+          document.getElementById('trip-map-status').textContent = 'Speed: ' + p.speed_kmh + ' km/h · Updated: ' + updated;
+        }).catch(function() {
+          document.getElementById('trip-map-status').textContent = 'Position unavailable.';
+        });
+      }
+      refresh();
+      setInterval(refresh, 30000);
+    })();
+    </script>
+    {% endif %}
 
     <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Actions</h2>

@@ -12,6 +12,7 @@ from services import trip_service
 from services import lr_generator
 from services import invoice_generator
 from services import export_service
+from services import tracker_service
 from services.auth import login_required
 
 trips_bp = Blueprint('trips', __name__, url_prefix='/trips')
@@ -73,7 +74,8 @@ def detail(trip_id: int):
     return render_template('trips/detail.html', trip=trip, activity=activity,
                            available_vehicles=available_vehicles,
                            available_drivers=available_drivers,
-                           payments=payments)
+                           payments=payments,
+                           traccar_configured=tracker_service.is_traccar_configured())
 
 
 @trips_bp.route('/<int:trip_id>/assign', methods=['POST'])

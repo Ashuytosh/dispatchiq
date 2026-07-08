@@ -6,6 +6,7 @@
   <title>{% block title %}DispatchIQ{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
 
@@ -36,6 +37,11 @@
           {% endmacro %}
 
           {{ nav_link('dashboard.index', '/', 'Dashboard') }}
+          <a id="fleet-map-nav" href="{{ url_for('map.fleet_map') }}" style="display:none"
+             class="px-3 py-2 rounded text-sm font-medium
+                    {% if request.path.startswith('/map') %}bg-gray-800 text-white{% else %}text-gray-400 hover:text-white hover:bg-gray-800{% endif %} transition">
+            🗺️ Fleet Map
+          </a>
           {{ nav_link('trips.list_trips', '/trips', 'Trips') }}
 
           <div class="relative">
@@ -140,6 +146,13 @@
     fetch('/api/whatsapp/status').then(r=>r.json()).then(d=>{
       const dot=document.getElementById('wa-dot');
       if(dot) dot.className='w-2 h-2 rounded-full flex-shrink-0 '+(d.connected?'bg-green-500':'bg-red-500');
+    }).catch(()=>{});
+
+    fetch('/api/map/positions').then(r=>r.json()).then(d=>{
+      if (Array.isArray(d) && d.length > 0) {
+        const link = document.getElementById('fleet-map-nav');
+        if (link) link.style.display = '';
+      }
     }).catch(()=>{});
 
     document.querySelectorAll('[data-menu-toggle]').forEach(function(btn) {

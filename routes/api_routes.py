@@ -4,6 +4,7 @@ from models import vehicle as vehicle_model
 from models import client as client_model
 from services import trip_service
 from services import analytics_service
+from services import tracker_service
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -81,6 +82,30 @@ def whatsapp_status():
 def get_owner_phone():
     from models.settings import get_setting
     return jsonify({'owner_phone': get_setting('whatsapp_owner_phone', '')})
+
+
+@api_bp.route('/map/positions', methods=['GET'])
+def map_positions():
+    return jsonify(tracker_service.get_all_positions())
+
+
+@api_bp.route('/map/vehicle/<plate_number>', methods=['GET'])
+def map_vehicle_position(plate_number: str):
+    position = tracker_service.get_vehicle_position(plate_number)
+    if position is None:
+        return jsonify({'error': 'No position found for this vehicle'}), 404
+    return jsonify(position)
+
+
+@api_bp.route('/settings/test-traccar', methods=['POST'])
+def test_traccar():
+    data = request.get_json(force=True) or {}
+    result = tracker_service.test_traccar_connection(
+        url=(data.get('url') or '').strip(),
+        username=(data.get('username') or '').strip(),
+        password=data.get('password') or '',
+    )
+    return jsonify(result)
 
 
 @api_bp.route('/ai/parse-trip', methods=['POST'])
