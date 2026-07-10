@@ -1,9 +1,9 @@
 import os
 from datetime import date
-from flask import Blueprint, render_template, request, send_file
+from flask import Blueprint, render_template, request, send_file, redirect, url_for
 from services import trip_service
 from services import export_service
-from services.auth import login_required
+from services.auth import login_required, get_current_user
 from models import trip as trip_model
 from models import payment as payment_model
 
@@ -11,6 +11,14 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 
 @dashboard_bp.route('/')
+def landing():
+    if get_current_user():
+        return redirect(url_for('dashboard.index'))
+    return render_template('landing.html')
+
+
+@dashboard_bp.route('/dashboard')
+@login_required
 def index():
     stats = trip_service.get_dashboard_stats()
     all_trips = trip_model.get_all_trips()

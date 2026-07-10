@@ -21,7 +21,7 @@
 </div>
 
 {% if not configured %}
-<div class="bg-gray-900 border border-gray-800 rounded-lg p-10 text-center text-gray-400">
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-10 text-center text-gray-400">
   <p class="text-lg mb-2">GPS tracking not configured.</p>
   <p class="text-sm">Go to
     <a href="{{ url_for('settings.index') }}" class="text-blue-400 hover:underline">Settings</a>
@@ -29,7 +29,10 @@
   </p>
 </div>
 {% else %}
-<div id="fleet-map" class="rounded-lg border border-gray-800"></div>
+<div id="fleet-map-empty" class="hidden bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center text-gray-400 mb-4">
+  No vehicles found. Make sure your Traccar devices are reporting and their names match your vehicle plate numbers.
+</div>
+<div id="fleet-map" class="rounded-2xl border border-gray-800"></div>
 <script>
 const map = L.map('fleet-map').setView([20.5937, 78.9629], 5);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -76,6 +79,7 @@ function refresh() {
     document.getElementById('count-stopped').textContent = stopped;
     document.getElementById('count-total').textContent = positions.length;
     document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+    document.getElementById('fleet-map-empty').classList.toggle('hidden', positions.length > 0);
   }).catch(() => {});
 }
 

@@ -62,7 +62,7 @@ def create_app() -> Flask:
 
     @app.before_request
     def require_login():
-        public_endpoints = {'auth.login', 'auth.signup', 'auth.logout', 'static'}
+        public_endpoints = {'auth.login', 'auth.signup', 'auth.logout', 'dashboard.landing', 'static'}
         if not request.endpoint:
             return
         if request.endpoint in public_endpoints:
@@ -76,6 +76,11 @@ def create_app() -> Flask:
     def inject_user():
         from services.auth import get_current_user
         return dict(current_user=get_current_user())
+
+    @app.context_processor
+    def inject_traccar_status():
+        from services import tracker_service
+        return dict(traccar_configured=tracker_service.is_traccar_configured())
 
     from services.scheduler import start_scheduler
     try:

@@ -4,9 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — DispatchIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .orb {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(90px);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .orb-1 {
+      width: 28rem; height: 28rem;
+      background: radial-gradient(circle, #f59e0b, transparent 70%);
+      top: -6rem; left: -8rem;
+      animation: drift1 22s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 24rem; height: 24rem;
+      background: radial-gradient(circle, #d97706, transparent 70%);
+      bottom: -6rem; right: -8rem;
+      animation: drift2 18s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 {
+      from { transform: translate(0, 0); }
+      to { transform: translate(4rem, 5rem); }
+    }
+    @keyframes drift2 {
+      from { transform: translate(0, 0); }
+      to { transform: translate(-3rem, -4rem); }
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen flex flex-col items-center justify-center px-4">
+<body class="relative overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen flex flex-col items-center justify-center px-4">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -23,7 +61,7 @@
   {% endwith %}
 
   <div id="login-card"
-       class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8 opacity-0">
+       class="relative w-full max-w-md bg-gray-900/60 backdrop-blur-xl border border-gray-800 rounded-2xl shadow-2xl p-8 opacity-0">
 
     <div class="text-center mb-8">
       <div class="text-4xl mb-2">🚚</div>

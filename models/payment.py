@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional
-from models.database import get_db, close_db
+from models.database import get_db, close_db, insert_and_get_id
 
 
 def _recalculate_trip_totals(db: sqlite3.Connection, trip_id: int) -> None:
@@ -39,13 +39,13 @@ def create_payment(
 ) -> int:
     db = get_db()
     try:
-        cursor = db.execute(
+        payment_id = insert_and_get_id(
+            db,
             """INSERT INTO payments
                (trip_id, amount, payment_mode, payment_reference, payment_date, notes, recorded_by)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (trip_id, amount, payment_mode, payment_reference, payment_date, notes, recorded_by),
         )
-        payment_id = cursor.lastrowid
         _recalculate_trip_totals(db, trip_id)
         db.commit()
         return payment_id

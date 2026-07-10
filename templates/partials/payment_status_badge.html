@@ -3,6 +3,12 @@
   'partial': 'bg-yellow-900 text-yellow-300',
   'paid':    'bg-emerald-900 text-emerald-300',
 } %}
-<span class="px-2 py-1 rounded-full text-xs font-medium {{ badge_classes.get(payment_status, 'bg-gray-700 text-gray-300') }}">
+{% set dot_classes = {
+  'unpaid':  'bg-red-400',
+  'partial': 'bg-yellow-400',
+  'paid':    'bg-emerald-400',
+} %}
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium {{ badge_classes.get(payment_status, 'bg-gray-700 text-gray-300') }}">
+  <span class="w-1.5 h-1.5 rounded-full {{ dot_classes.get(payment_status, 'bg-gray-400') }}"></span>
   {{ payment_status | replace('_', ' ') | title }}
 </span>

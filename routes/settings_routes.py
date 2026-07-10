@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import settings as settings_model
 from models import client as client_model
 from services.whatsapp_service import check_whatsapp_status
+from services import db_service
 from services.auth import admin_required
 
 settings_bp = Blueprint('settings', __name__, url_prefix='/settings')
@@ -27,8 +28,9 @@ def index():
         notify_clients = json.loads(current.get('notify_clients', '{}') or '{}')
     except (json.JSONDecodeError, TypeError):
         notify_clients = {}
+    db_status = db_service.get_database_status()
     return render_template('settings.html', settings=current, wa_connected=wa_connected,
-                           clients=clients, notify_clients=notify_clients)
+                           clients=clients, notify_clients=notify_clients, db_status=db_status)
 
 
 @settings_bp.route('/save', methods=['POST'])

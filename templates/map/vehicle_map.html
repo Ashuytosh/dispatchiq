@@ -14,7 +14,7 @@
 </div>
 
 {% if not configured %}
-<div class="bg-gray-900 border border-gray-800 rounded-lg p-10 text-center text-gray-400">
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-10 text-center text-gray-400">
   <p class="text-lg mb-2">GPS tracking not configured.</p>
   <p class="text-sm">Go to
     <a href="{{ url_for('settings.index') }}" class="text-blue-400 hover:underline">Settings</a>
@@ -24,7 +24,7 @@
 {% else %}
 
 {% if trip %}
-<div class="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4 flex items-center justify-between">
+<div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-4 flex items-center justify-between">
   <div class="text-sm text-gray-300">
     On trip: {{ trip.from_location }} → {{ trip.to_location }}
     <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-300">{{ trip.status | replace('_', ' ') | title }}</span>
@@ -33,7 +33,7 @@
 </div>
 {% endif %}
 
-<div id="vehicle-map" class="rounded-lg border border-gray-800"></div>
+<div id="vehicle-map" class="rounded-2xl border border-gray-800"></div>
 <p class="text-sm text-gray-300 mt-2" id="vehicle-map-status">Loading position…</p>
 
 <script>

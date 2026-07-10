@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Optional
-from models.database import get_db, close_db
+from models.database import get_db, close_db, insert_and_get_id
 
 
 def get_all_clients() -> list[sqlite3.Row]:
@@ -33,13 +33,14 @@ def create_client(
 ) -> int:
     db = get_db()
     try:
-        cursor = db.execute(
+        new_id = insert_and_get_id(
+            db,
             """INSERT INTO clients (name, phone, email, address, gst_number)
                VALUES (?, ?, ?, ?, ?)""",
             (name, phone, email, address, gst_number),
         )
         db.commit()
-        return cursor.lastrowid
+        return new_id
     finally:
         close_db(db)
 

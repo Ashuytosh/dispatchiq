@@ -5,12 +5,12 @@
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-2xl font-bold text-white">Clients</h1>
   <a href="{{ url_for('clients.create_form') }}"
-     class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded transition">
+     class="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-gray-950 text-sm font-medium px-4 py-2 rounded-xl transition">
     + Add Client
   </a>
 </div>
 
-<div class="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden">
+<div class="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
   {% if clients %}
   <div class="overflow-x-auto">
     <table class="w-full text-sm">

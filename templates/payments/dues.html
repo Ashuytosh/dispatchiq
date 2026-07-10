@@ -5,12 +5,12 @@
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-2xl font-bold text-white">Client Dues</h1>
   <a href="{{ url_for('payments.export_dues') }}"
-     class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+     class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition">
     📥 Export Dues Report
   </a>
 </div>
 
-<div class="bg-red-950 border border-red-800 rounded-lg p-6 mb-8 text-center">
+<div class="bg-red-950 border border-red-800 rounded-2xl p-6 mb-8 text-center">
   <p class="text-red-300 text-sm uppercase tracking-wide mb-1">Total Pending</p>
   <p class="text-4xl font-bold text-red-400">{{ summary.total_pending | money }}</p>
 </div>
@@ -18,7 +18,7 @@
 {% if dues %}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
   {% for item in dues %}
-  <details class="bg-gray-900 rounded-lg border border-gray-800">
+  <details class="bg-gray-900 rounded-2xl border border-gray-800 hover:border-amber-500/30 transition">
     <summary class="p-5 cursor-pointer list-none">
       <p class="text-white font-semibold">{{ item.client.client_name }}</p>
       <p class="text-gray-500 text-xs mb-3">{{ item.client.trip_count }} pending trip(s)</p>
@@ -78,7 +78,7 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="bg-gray-900 rounded-lg border border-gray-800 px-5 py-10 text-center text-gray-500">
+<div class="bg-gray-900 rounded-2xl border border-gray-800 px-5 py-10 text-center text-gray-500">
   No outstanding dues. All clients are settled up.
 </div>
 {% endif %}

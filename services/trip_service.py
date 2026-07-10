@@ -4,22 +4,13 @@ from typing import Any
 from models import trip as trip_model
 from models import vehicle as vehicle_model
 from models import client as client_model
-from models.database import get_db, close_db
 from models.settings import get_setting
 from services import lr_generator, invoice_generator
 from services import whatsapp_service
 
 
 def _log_activity(trip_id: int, action: str, message: str) -> None:
-    db = get_db()
-    try:
-        db.execute(
-            "INSERT INTO activity_log (trip_id, action, message) VALUES (?, ?, ?)",
-            (trip_id, action, message),
-        )
-        db.commit()
-    finally:
-        close_db(db)
+    trip_model.log_trip_activity(trip_id, action, message)
 
 
 def create_new_trip(data: dict[str, Any]) -> int:
@@ -146,31 +137,10 @@ def cancel_trip(trip_id: int) -> None:
 def get_dashboard_stats() -> dict[str, Any]:
     stats = trip_model.get_trip_stats()
     today = date.today().isoformat()
-    db = get_db()
-    try:
-        row = db.execute(
-            "SELECT COUNT(*) as cnt FROM trips WHERE DATE(created_at) = ?", (today,)
-        ).fetchone()
-        today_created = row['cnt'] if row else 0
-
-        row = db.execute(
-            "SELECT COUNT(*) as cnt FROM trips WHERE DATE(delivered_at) = ?", (today,)
-        ).fetchone()
-        today_delivered = row['cnt'] if row else 0
-
-        row = db.execute(
-            "SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips WHERE DATE(paid_at) = ?",
-            (today,),
-        ).fetchone()
-        today_revenue = row['total'] if row else 0
-
-        row = db.execute(
-            "SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips "
-            "WHERE strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')"
-        ).fetchone()
-        month_revenue = row['total'] if row else 0
-    finally:
-        close_db(db)
+    today_created = trip_model.get_trip_count_on_date('created_at', today)
+    today_delivered = trip_model.get_trip_count_on_date('delivered_at', today)
+    today_revenue = trip_model.get_revenue_on_date(today)
+    month_revenue = trip_model.get_current_month_revenue()
 
     return {
         **stats,

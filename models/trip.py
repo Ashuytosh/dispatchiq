@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 from typing import Optional
-from models.database import get_db, close_db
+from models.database import get_db, close_db, insert_and_get_id, get_db_type
 
 
 VALID_TRANSITIONS: dict[str, list[str]] = {
@@ -78,7 +78,8 @@ def create_trip(
     balance = freight_amount - advance_paid
     db = get_db()
     try:
-        cursor = db.execute(
+        new_id = insert_and_get_id(
+            db,
             """INSERT INTO trips
                (client_id, from_location, to_location, goods_description,
                 weight_tons, num_packages, freight_amount, advance_paid, balance_amount)
@@ -87,7 +88,7 @@ def create_trip(
              weight_tons, num_packages, freight_amount, advance_paid, balance),
         )
         db.commit()
-        return cursor.lastrowid
+        return new_id
     finally:
         close_db(db)
 
@@ -196,15 +197,29 @@ def get_trip_stats() -> dict[str, int]:
 def get_monthly_revenue_trend(months: int = 6) -> list[sqlite3.Row]:
     db = get_db()
     try:
-        return db.execute("""
-            SELECT strftime('%Y-%m', paid_at) as ym,
-                   COALESCE(SUM(freight_amount), 0) as total_revenue
-            FROM trips
-            WHERE status = 'paid'
-              AND paid_at >= date('now', ?, 'start of month')
-            GROUP BY ym
-            ORDER BY ym
-        """, (f'-{months - 1} months',)).fetchall()
+        if get_db_type() == 'postgresql':
+            query = """
+                SELECT TO_CHAR(paid_at, 'YYYY-MM') as ym,
+                       COALESCE(SUM(freight_amount), 0) as total_revenue
+                FROM trips
+                WHERE status = 'paid'
+                  AND paid_at >= DATE_TRUNC('month', CURRENT_DATE - (? || ' months')::interval)
+                GROUP BY ym
+                ORDER BY ym
+            """
+            params = (str(months - 1),)
+        else:
+            query = """
+                SELECT strftime('%Y-%m', paid_at) as ym,
+                       COALESCE(SUM(freight_amount), 0) as total_revenue
+                FROM trips
+                WHERE status = 'paid'
+                  AND paid_at >= date('now', ?, 'start of month')
+                GROUP BY ym
+                ORDER BY ym
+            """
+            params = (f'-{months - 1} months',)
+        return db.execute(query, params).fetchall()
     finally:
         close_db(db)
 
@@ -212,13 +227,25 @@ def get_monthly_revenue_trend(months: int = 6) -> list[sqlite3.Row]:
 def get_daily_trip_counts(days: int = 30) -> list[sqlite3.Row]:
     db = get_db()
     try:
-        return db.execute("""
-            SELECT DATE(created_at) as day, COUNT(*) as trip_count
-            FROM trips
-            WHERE DATE(created_at) >= date('now', ?)
-            GROUP BY day
-            ORDER BY day
-        """, (f'-{days - 1} days',)).fetchall()
+        if get_db_type() == 'postgresql':
+            query = """
+                SELECT created_at::date as day, COUNT(*) as trip_count
+                FROM trips
+                WHERE created_at::date >= CURRENT_DATE - (? || ' days')::interval
+                GROUP BY day
+                ORDER BY day
+            """
+            params = (str(days - 1),)
+        else:
+            query = """
+                SELECT DATE(created_at) as day, COUNT(*) as trip_count
+                FROM trips
+                WHERE DATE(created_at) >= date('now', ?)
+                GROUP BY day
+                ORDER BY day
+            """
+            params = (f'-{days - 1} days',)
+        return db.execute(query, params).fetchall()
     finally:
         close_db(db)
 
@@ -252,17 +279,25 @@ def generate_invoice_number() -> str:
 def get_trips_by_month(month: int, year: int) -> list[sqlite3.Row]:
     db = get_db()
     try:
-        return db.execute(
-            """SELECT t.*, c.name as client_name,
+        base_query = """SELECT t.*, c.name as client_name,
                       v.plate_number, d.name as driver_name
                FROM trips t
                LEFT JOIN clients c ON t.client_id = c.id
                LEFT JOIN vehicles v ON t.vehicle_id = v.id
                LEFT JOIN drivers d ON t.driver_id = d.id
-               WHERE strftime('%m', t.created_at) = ? AND strftime('%Y', t.created_at) = ?
-               ORDER BY t.created_at""",
-            (f"{month:02d}", str(year)),
-        ).fetchall()
+               WHERE {condition}
+               ORDER BY t.created_at"""
+        if get_db_type() == 'postgresql':
+            query = base_query.format(
+                condition="EXTRACT(MONTH FROM t.created_at) = ? AND EXTRACT(YEAR FROM t.created_at) = ?"
+            )
+            params = (month, year)
+        else:
+            query = base_query.format(
+                condition="strftime('%m', t.created_at) = ? AND strftime('%Y', t.created_at) = ?"
+            )
+            params = (f"{month:02d}", str(year))
+        return db.execute(query, params).fetchall()
     finally:
         close_db(db)
 
@@ -287,5 +322,95 @@ def get_trip_activity(trip_id: int) -> list[sqlite3.Row]:
             "SELECT * FROM activity_log WHERE trip_id = ? ORDER BY created_at ASC",
             (trip_id,),
         ).fetchall()
+    finally:
+        close_db(db)
+
+
+def log_trip_activity(trip_id: int, action: str, message: str) -> None:
+    db = get_db()
+    try:
+        db.execute(
+            "INSERT INTO activity_log (trip_id, action, message) VALUES (?, ?, ?)",
+            (trip_id, action, message),
+        )
+        db.commit()
+    finally:
+        close_db(db)
+
+
+def _date_eq_condition(column: str) -> str:
+    if get_db_type() == 'postgresql':
+        return f"{column}::date = ?"
+    return f"DATE({column}) = ?"
+
+
+def get_trip_count_on_date(column: str, day: str) -> int:
+    allowed = {'created_at', 'delivered_at'}
+    if column not in allowed:
+        raise ValueError(f"Unsupported column: {column}")
+    db = get_db()
+    try:
+        row = db.execute(
+            f"SELECT COUNT(*) as cnt FROM trips WHERE {_date_eq_condition(column)}",
+            (day,),
+        ).fetchone()
+        return row['cnt'] if row else 0
+    finally:
+        close_db(db)
+
+
+def get_revenue_on_date(day: str) -> float:
+    db = get_db()
+    try:
+        row = db.execute(
+            f"SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips "
+            f"WHERE {_date_eq_condition('paid_at')}",
+            (day,),
+        ).fetchone()
+        return float(row['total']) if row else 0.0
+    finally:
+        close_db(db)
+
+
+def get_current_month_revenue() -> float:
+    db = get_db()
+    try:
+        if get_db_type() == 'postgresql':
+            query = """SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips
+                       WHERE TO_CHAR(paid_at, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')"""
+        else:
+            query = """SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips
+                       WHERE strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')"""
+        row = db.execute(query).fetchone()
+        return float(row['total']) if row else 0.0
+    finally:
+        close_db(db)
+
+
+def get_overdue_trips(min_days: int = 2) -> list[dict]:
+    db = get_db()
+    try:
+        if get_db_type() == 'postgresql':
+            query = """
+                SELECT id, from_location, to_location, status,
+                       CAST(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - dispatched_at)) / 86400 AS INTEGER) as days_out
+                FROM trips
+                WHERE status IN ('dispatched', 'in_transit')
+                  AND dispatched_at IS NOT NULL
+                  AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - dispatched_at)) / 86400 >= ?
+                ORDER BY days_out DESC
+            """
+        else:
+            query = """
+                SELECT id, from_location, to_location, status,
+                       CAST(julianday('now') - julianday(dispatched_at) AS INTEGER) as days_out
+                FROM trips
+                WHERE status IN ('dispatched', 'in_transit')
+                  AND dispatched_at IS NOT NULL
+                  AND julianday('now') - julianday(dispatched_at) >= ?
+                ORDER BY days_out DESC
+            """
+        rows = db.execute(query, (min_days,)).fetchall()
+        return [dict(r) for r in rows]
     finally:
         close_db(db)

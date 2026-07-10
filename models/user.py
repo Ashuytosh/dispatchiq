@@ -1,19 +1,20 @@
 from werkzeug.security import generate_password_hash, check_password_hash
-from models.database import get_db, close_db
+from models.database import get_db, close_db, insert_and_get_id
 
 
 def create_user(username: str, email: str, password: str, full_name: str,
                 role: str = 'dispatcher') -> int:
     db = get_db()
     try:
-        cur = db.execute(
+        new_id = insert_and_get_id(
+            db,
             """INSERT INTO users (username, email, password_hash, full_name, role)
                VALUES (?, ?, ?, ?, ?)""",
             (username.strip(), email.strip().lower(),
              generate_password_hash(password), full_name.strip(), role),
         )
         db.commit()
-        return cur.lastrowid
+        return new_id
     finally:
         close_db(db)
 
@@ -94,7 +95,7 @@ def update_user(user_id: int, **kwargs) -> None:
 def deactivate_user(user_id: int) -> None:
     db = get_db()
     try:
-        db.execute("UPDATE users SET is_active = 0 WHERE id = ?", (user_id,))
+        db.execute("UPDATE users SET is_active = ? WHERE id = ?", (False, user_id))
         db.commit()
     finally:
         close_db(db)

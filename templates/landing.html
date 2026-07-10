@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DispatchIQ — Dispatch Smarter. Deliver Faster.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+
+    .orb {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(90px);
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .orb-1 {
+      width: 32rem; height: 32rem;
+      background: radial-gradient(circle, #f59e0b, transparent 70%);
+      top: -8rem; left: -8rem;
+      animation: drift1 22s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 26rem; height: 26rem;
+      background: radial-gradient(circle, #d97706, transparent 70%);
+      bottom: -6rem; right: -6rem;
+      animation: drift2 18s ease-in-out infinite alternate;
+    }
+    .orb-3 {
+      width: 20rem; height: 20rem;
+      background: radial-gradient(circle, #fbbf24, transparent 70%);
+      top: 30%; right: 15%;
+      animation: drift3 26s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 {
+      from { transform: translate(0, 0); }
+      to { transform: translate(4rem, 5rem); }
+    }
+    @keyframes drift2 {
+      from { transform: translate(0, 0); }
+      to { transform: translate(-3rem, -4rem); }
+    }
+    @keyframes drift3 {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-5rem, 3rem) scale(1.15); }
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 antialiased">
+
+  <!-- Nav -->
+  <nav class="sticky top-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-white font-bold text-lg tracking-tight">
+        🚚 DispatchIQ
+      </div>
+      <a href="{{ url_for('auth.login') }}"
+         class="px-4 py-2 rounded-xl text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-gray-950 transition">
+        Sign In
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden min-h-screen flex items-center">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+      <span data-aos="fade-up"
+            class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm font-medium mb-6">
+        🚛 Built for Indian Logistics
+      </span>
+
+      <h1 data-aos="fade-up" data-aos-delay="100"
+          class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
+        Dispatch Smarter.<br>
+        <span class="text-amber-500">Deliver Faster.</span>
+      </h1>
+
+      <p data-aos="fade-up" data-aos-delay="200"
+         class="mt-6 max-w-2xl mx-auto text-lg text-gray-400">
+        Trip management, automated LR &amp; invoicing, live GPS tracking, and payment
+        tracking — all in one platform built for Indian transport &amp; logistics businesses.
+      </p>
+
+      <div data-aos="fade-up" data-aos-delay="300"
+           class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="{{ url_for('auth.login') }}"
+           class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 font-semibold text-base transition shadow-lg shadow-amber-500/20">
+          Get Started →
+        </a>
+        <a href="#how-it-works"
+           class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-gray-700 hover:border-amber-500/50 text-gray-200 font-semibold text-base transition">
+          Watch Demo ▶
+        </a>
+      </div>
+
+      <!-- Mini dashboard mockup -->
+      <div data-aos="fade-up" data-aos-delay="400"
+           class="mt-16 max-w-4xl mx-auto rounded-2xl border border-gray-800 bg-gray-900/50 backdrop-blur shadow-2xl overflow-hidden text-left">
+        <div class="flex items-center gap-1.5 px-4 py-3 border-b border-gray-800 bg-gray-900/70">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500/70"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500/70"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-green-500/70"></span>
+          <span class="ml-3 text-xs text-gray-500">dispatchiq.app/dashboard</span>
+        </div>
+        <div class="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="rounded-xl bg-gray-800/60 border border-gray-800 p-4">
+            <p class="text-xs text-gray-500">Active Trips</p>
+            <p class="text-2xl font-bold text-white mt-1">18</p>
+          </div>
+          <div class="rounded-xl bg-gray-800/60 border border-gray-800 p-4">
+            <p class="text-xs text-gray-500">Revenue (MTD)</p>
+            <p class="text-2xl font-bold text-amber-500 mt-1">₹4.2L</p>
+          </div>
+          <div class="rounded-xl bg-gray-800/60 border border-gray-800 p-4">
+            <p class="text-xs text-gray-500">Vehicles</p>
+            <p class="text-2xl font-bold text-white mt-1">32</p>
+          </div>
+          <div class="rounded-xl bg-gray-800/60 border border-gray-800 p-4">
+            <p class="text-xs text-gray-500">Dues</p>
+            <p class="text-2xl font-bold text-white mt-1">₹86K</p>
+          </div>
+        </div>
+        <div class="px-6 pb-6 space-y-2">
+          <div class="h-8 rounded-lg bg-gray-800/60 border border-gray-800 w-full"></div>
+          <div class="h-8 rounded-lg bg-gray-800/40 border border-gray-800 w-full"></div>
+          <div class="h-8 rounded-lg bg-gray-800/40 border border-gray-800 w-5/6"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="text-center mb-14" data-aos="fade-up">
+      <h2 class="text-3xl sm:text-4xl font-bold text-white">Everything you need to run dispatch</h2>
+      <p class="mt-3 text-gray-400">One platform, from booking to payment.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div data-aos="fade-up" data-aos-delay="0"
+           class="rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-amber-500/50 transition p-6">
+        <i data-lucide="truck" class="w-8 h-8 text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-white">Trip Management</h3>
+        <p class="mt-2 text-sm text-gray-400">Create, assign, and track trips through every stage of the delivery lifecycle.</p>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="100"
+           class="rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-amber-500/50 transition p-6">
+        <i data-lucide="file-text" class="w-8 h-8 text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-white">Auto LR &amp; Invoice</h3>
+        <p class="mt-2 text-sm text-gray-400">LRs and invoices generate automatically as trips move through dispatch and delivery.</p>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="200"
+           class="rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-amber-500/50 transition p-6">
+        <i data-lucide="message-circle" class="w-8 h-8 text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-white">WhatsApp Alerts</h3>
+        <p class="mt-2 text-sm text-gray-400">Clients and drivers get automatic status updates over WhatsApp.</p>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="0"
+           class="rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-amber-500/50 transition p-6">
+        <i data-lucide="bot" class="w-8 h-8 text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-white">AI-Powered</h3>
+        <p class="mt-2 text-sm text-gray-400">Smart summaries and insights so you always know what needs attention.</p>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="100"
+           class="rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-amber-500/50 transition p-6">
+        <i data-lucide="map-pin" class="w-8 h-8 text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-white">Live GPS Tracking</h3>
+        <p class="mt-2 text-sm text-gray-400">See exactly where every vehicle in your fleet is, in real time.</p>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="200"
+           class="rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-amber-500/50 transition p-6">
+        <i data-lucide="wallet" class="w-8 h-8 text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-white">Payment Tracking</h3>
+        <p class="mt-2 text-sm text-gray-400">Track client dues and payment status without a separate spreadsheet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="text-center mb-16" data-aos="fade-up">
+      <h2 class="text-3xl sm:text-4xl font-bold text-white">How it works</h2>
+      <p class="mt-3 text-gray-400">Up and running in three steps.</p>
+    </div>
+
+    <div class="flex flex-col md:flex-row items-center md:items-start gap-10 md:gap-0">
+      <div class="flex-1 flex flex-col items-center text-center" data-aos="fade-right" data-aos-delay="0">
+        <div class="w-14 h-14 rounded-full bg-amber-500 text-gray-950 font-bold text-xl flex items-center justify-center">1</div>
+        <h3 class="mt-4 text-lg font-semibold text-white">Install</h3>
+        <p class="mt-2 text-sm text-gray-400 max-w-xs">Set up DispatchIQ for your fleet in minutes, no IT team required.</p>
+      </div>
+      <div class="hidden md:block h-px bg-gray-800 flex-1 mt-7"></div>
+      <div class="flex-1 flex flex-col items-center text-center" data-aos="fade-right" data-aos-delay="150">
+        <div class="w-14 h-14 rounded-full bg-amber-500 text-gray-950 font-bold text-xl flex items-center justify-center">2</div>
+        <h3 class="mt-4 text-lg font-semibold text-white">Configure</h3>
+        <p class="mt-2 text-sm text-gray-400 max-w-xs">Add your vehicles, drivers, and clients — DispatchIQ handles the rest.</p>
+      </div>
+      <div class="hidden md:block h-px bg-gray-800 flex-1 mt-7"></div>
+      <div class="flex-1 flex flex-col items-center text-center" data-aos="fade-right" data-aos-delay="300">
+        <div class="w-14 h-14 rounded-full bg-amber-500 text-gray-950 font-bold text-xl flex items-center justify-center">3</div>
+        <h3 class="mt-4 text-lg font-semibold text-white">Dispatch</h3>
+        <p class="mt-2 text-sm text-gray-400 max-w-xs">Create trips and let automation handle LRs, invoices, and alerts.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+      <div data-aos="zoom-in">
+        <p class="text-4xl sm:text-5xl font-extrabold text-amber-500">500+</p>
+        <p class="mt-2 text-gray-400">Trips Managed</p>
+      </div>
+      <div data-aos="zoom-in" data-aos-delay="100">
+        <p class="text-4xl sm:text-5xl font-extrabold text-amber-500">₹50L+</p>
+        <p class="mt-2 text-gray-400">Revenue Tracked</p>
+      </div>
+      <div data-aos="zoom-in" data-aos-delay="200">
+        <p class="text-4xl sm:text-5xl font-extrabold text-amber-500">100%</p>
+        <p class="mt-2 text-gray-400">Automated</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Table -->
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div class="text-center mb-12" data-aos="fade-up">
+      <h2 class="text-3xl sm:text-4xl font-bold text-white">Why teams switch</h2>
+      <p class="mt-3 text-gray-400">Manual process vs. DispatchIQ.</p>
+    </div>
+
+    <div data-aos="fade-up" class="rounded-2xl border border-gray-800 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-900">
+          <tr>
+            <th class="text-left px-6 py-4 text-gray-400 font-medium">Task</th>
+            <th class="text-left px-6 py-4 text-gray-400 font-medium">Manual Process</th>
+            <th class="text-left px-6 py-4 text-amber-500 font-medium">DispatchIQ</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-800 bg-gray-900/50">
+          <tr>
+            <td class="px-6 py-4 text-gray-300">Trip status updates</td>
+            <td class="px-6 py-4 text-gray-500">Phone calls &amp; guesswork</td>
+            <td class="px-6 py-4 text-gray-200 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Real-time, automatic</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 text-gray-300">LR &amp; invoice generation</td>
+            <td class="px-6 py-4 text-gray-500">Manual typing, errors</td>
+            <td class="px-6 py-4 text-gray-200 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Auto-generated PDFs</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 text-gray-300">Client notifications</td>
+            <td class="px-6 py-4 text-gray-500">Forgotten, delayed</td>
+            <td class="px-6 py-4 text-gray-200 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Sent via WhatsApp</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 text-gray-300">Vehicle location</td>
+            <td class="px-6 py-4 text-gray-500">Ask the driver</td>
+            <td class="px-6 py-4 text-gray-200 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Live GPS map</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-4 text-gray-300">Payment &amp; dues tracking</td>
+            <td class="px-6 py-4 text-gray-500">Spreadsheets</td>
+            <td class="px-6 py-4 text-gray-200 flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Built-in dashboard</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <div data-aos="fade-up"
+         class="rounded-2xl bg-gradient-to-r from-amber-600 to-amber-500 px-8 py-16 text-center shadow-2xl shadow-amber-500/10">
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-950">Ready to Modernize Your Transport Business?</h2>
+      <p class="mt-4 text-gray-900/80 text-lg">Join transport operators already dispatching smarter with DispatchIQ.</p>
+      <a href="{{ url_for('auth.login') }}"
+         class="mt-8 inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gray-950 hover:bg-gray-900 text-white font-semibold text-base transition">
+        Sign In →
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+      <span class="flex items-center gap-2 text-white font-semibold">🚚 DispatchIQ</span>
+      <span>© 2026 DispatchIQ — Built with ❤️ in India</span>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    AOS.init({ duration: 800, once: true });
+    lucide.createIcons();
+  </script>
+</body>
+</html>

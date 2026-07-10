@@ -9,26 +9,26 @@
   </div>
 
   <form method="POST" action="{{ url_for('drivers.edit', driver_id=driver.id) }}">
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <div>
         <label class="block text-sm text-gray-300 mb-1">Full Name <span class="text-red-400">*</span></label>
         <input type="text" name="name" required value="{{ driver.name }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Phone <span class="text-red-400">*</span></label>
         <input type="tel" name="phone" required value="{{ driver.phone }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">License Number <span class="text-red-400">*</span></label>
         <input type="text" name="license_number" required value="{{ driver.license_number }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Assigned Vehicle</label>
         <select name="assigned_vehicle_id"
-                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+                class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
           <option value="">None</option>
           {% for v in vehicles %}
             <option value="{{ v.id }}" {% if driver.assigned_vehicle_id == v.id %}selected{% endif %}>
@@ -43,7 +43,7 @@
       <a href="{{ url_for('drivers.list_drivers') }}"
          class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</a>
       <button type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded transition">
+              class="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-gray-950 text-sm font-medium px-6 py-2 rounded-xl transition">
         Save Changes
       </button>
     </div>

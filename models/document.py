@@ -6,12 +6,17 @@ from models.database import get_db, close_db
 def save_document(trip_id: int, doc_type: str, file_path: str) -> int:
     db = get_db()
     try:
-        cursor = db.execute(
-            "INSERT OR REPLACE INTO documents (trip_id, doc_type, file_path) VALUES (?, ?, ?)",
+        db.execute(
+            """INSERT INTO documents (trip_id, doc_type, file_path) VALUES (?, ?, ?)
+               ON CONFLICT(trip_id, doc_type) DO UPDATE SET file_path = excluded.file_path""",
             (trip_id, doc_type, file_path),
         )
         db.commit()
-        return cursor.lastrowid
+        row = db.execute(
+            "SELECT id FROM documents WHERE trip_id = ? AND doc_type = ?",
+            (trip_id, doc_type),
+        ).fetchone()
+        return row['id']
     finally:
         close_db(db)
 

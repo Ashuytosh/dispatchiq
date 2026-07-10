@@ -8,6 +8,17 @@
   'paid':       'bg-emerald-900 text-emerald-300',
   'cancelled':  'bg-red-900 text-red-300',
 } %}
-<span class="px-2 py-1 rounded-full text-xs font-medium {{ badge_classes.get(trip.status, 'bg-gray-700 text-gray-300') }}">
+{% set dot_classes = {
+  'created':    'bg-gray-400',
+  'assigned':   'bg-blue-400',
+  'dispatched': 'bg-yellow-400',
+  'in_transit': 'bg-orange-400',
+  'delivered':  'bg-green-400',
+  'invoiced':   'bg-purple-400',
+  'paid':       'bg-emerald-400',
+  'cancelled':  'bg-red-400',
+} %}
+<span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium {{ badge_classes.get(trip.status, 'bg-gray-700 text-gray-300') }}">
+  <span class="w-1.5 h-1.5 rounded-full {{ dot_classes.get(trip.status, 'bg-gray-400') }}"></span>
   {{ trip.status | replace('_', ' ') | title }}
 </span>

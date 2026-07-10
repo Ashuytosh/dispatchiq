@@ -9,31 +9,31 @@
   </div>
 
   <form method="POST" action="{{ url_for('clients.edit', client_id=client.id) }}">
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <div>
         <label class="block text-sm text-gray-300 mb-1">Company / Name <span class="text-red-400">*</span></label>
         <input type="text" name="name" required value="{{ client.name }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Phone <span class="text-red-400">*</span></label>
         <input type="tel" name="phone" required value="{{ client.phone }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Email</label>
         <input type="email" name="email" value="{{ client.email or '' }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Address</label>
         <textarea name="address" rows="2"
-                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 resize-none">{{ client.address or '' }}</textarea>
+                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none">{{ client.address or '' }}</textarea>
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">GST Number</label>
         <input type="text" name="gst_number" value="{{ client.gst_number or '' }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase">
       </div>
     </div>
 
@@ -41,7 +41,7 @@
       <a href="{{ url_for('clients.list_clients') }}"
          class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</a>
       <button type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded transition">
+              class="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-gray-950 text-sm font-medium px-6 py-2 rounded-xl transition">
         Save Changes
       </button>
     </div>

@@ -5,8 +5,20 @@
 <div class="max-w-2xl mx-auto">
   <h1 class="text-2xl font-bold text-white mb-6">Settings</h1>
 
+  <!-- Database info panel — read-only, set via DB_TYPE env var, not the web UI -->
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Database</h2>
+      <span class="flex items-center gap-1.5 text-sm font-medium
+        {{ 'text-green-400' if db_status.connected else 'text-red-400' }}">
+        {{ db_status.display }} {{ '✅ Connected' if db_status.connected else '❌ Disconnected' }}
+      </span>
+    </div>
+    <p class="text-xs text-gray-500">Set via the DB_TYPE environment variable — see .env.example. Changing database at runtime would lose all data, so this can't be switched from the web UI.</p>
+  </div>
+
   <!-- WhatsApp connection panel — outside the form so it doesn't submit -->
-  <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">WhatsApp Connection</h2>
       <span id="wa-status-badge" class="flex items-center gap-1.5 text-sm font-medium
@@ -22,7 +34,7 @@
       <p class="text-green-400 text-sm mb-3">✅ WhatsApp is linked and ready to send messages.</p>
       <form method="POST" action="http://localhost:3001/disconnect" target="_blank">
         <button type="submit"
-                class="text-xs bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded transition">
+                class="text-xs bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl transition">
           Disconnect WhatsApp
         </button>
       </form>
@@ -41,37 +53,37 @@
 
   <form method="POST" action="{{ url_for('settings.save') }}" class="space-y-6">
 
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Company Details</h2>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Company Name</label>
         <input type="text" name="company_name" value="{{ settings.get('company_name', '') }}"
                placeholder="e.g. DispatchIQ Logistics"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Address</label>
         <textarea name="company_address" rows="2"
                   placeholder="Full business address"
-                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 resize-none">{{ settings.get('company_address', '') }}</textarea>
+                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none">{{ settings.get('company_address', '') }}</textarea>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm text-gray-300 mb-1">Phone</label>
           <input type="text" name="company_phone" value="{{ settings.get('company_phone', '') }}"
                  placeholder="e.g. 9876543210"
-                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
         </div>
         <div>
           <label class="block text-sm text-gray-300 mb-1">GST Number</label>
           <input type="text" name="company_gst" value="{{ settings.get('company_gst', '') }}"
                  placeholder="e.g. 27AABCU9603R1ZX"
-                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase">
         </div>
       </div>
     </div>
 
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">WhatsApp Notifications</h2>
       <div class="flex items-center gap-3">
         <input type="checkbox" name="whatsapp_enabled" id="whatsapp_enabled" value="true"
@@ -83,17 +95,17 @@
         <label class="block text-sm text-gray-300 mb-1">Owner/Manager Phone for Alerts</label>
         <input type="text" name="whatsapp_owner_phone" value="{{ settings.get('whatsapp_owner_phone', '') }}"
                placeholder="e.g. 919876543210 (country code + number, no + sign)"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Daily Summary Time</label>
         <input type="time" name="daily_summary_time" value="{{ settings.get('daily_summary_time', '08:00') }}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
     </div>
 
     <!-- Notification Recipients -->
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Notification Recipients</h2>
       <p class="text-xs text-gray-500">Select which clients receive WhatsApp alerts for their shipments.</p>
       {% if clients %}
@@ -121,7 +133,7 @@
     </div>
 
     <!-- Notification Events -->
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-3">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-3">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Notify Clients On</h2>
       <p class="text-xs text-gray-500">Choose which events trigger a client WhatsApp alert.</p>
       <div class="flex items-center gap-3">
@@ -151,7 +163,7 @@
     </div>
 
     <!-- AI Configuration -->
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">🤖 AI Configuration</h2>
         {% if settings.get('gemini_api_key') %}
@@ -166,7 +178,7 @@
           <input type="password" name="gemini_api_key" id="gemini_api_key"
                  value="{{ settings.get('gemini_api_key', '') }}"
                  placeholder="AIza..."
-                 class="flex-1 bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 font-mono text-sm">
+                 class="flex-1 bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm">
           <button type="button" onclick="toggleGeminiKey()"
                   class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-2 rounded text-xs transition"
                   id="gemini_toggle">Show</button>
@@ -183,7 +195,7 @@
       </div>
       <div>
         <button type="button" onclick="testSummary()"
-                class="bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+                class="bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition">
           📊 Send Test Summary Now
         </button>
         <div id="summary-result" class="mt-3 hidden">
@@ -192,49 +204,49 @@
       </div>
     </div>
 
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Bank Details (for Invoices)</h2>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Bank Name</label>
         <input type="text" name="bank_name" value="{{ settings.get('bank_name', '') }}"
                placeholder="e.g. State Bank of India"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm text-gray-300 mb-1">Account Number</label>
           <input type="text" name="bank_account" value="{{ settings.get('bank_account', '') }}"
                  placeholder="e.g. 12345678901"
-                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
         </div>
         <div>
           <label class="block text-sm text-gray-300 mb-1">IFSC Code</label>
           <input type="text" name="bank_ifsc" value="{{ settings.get('bank_ifsc', '') }}"
                  placeholder="e.g. SBIN0001234"
-                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500 uppercase">
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent uppercase">
         </div>
       </div>
     </div>
 
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-4">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">Integrations</h2>
       <div>
         <label class="block text-sm text-gray-300 mb-1">Traccar Server URL</label>
         <input type="url" name="traccar_url" id="traccar_url" value="{{ settings.get('traccar_url', '') }}"
                placeholder="e.g. https://demo.traccar.org"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm text-gray-300 mb-1">Username / Email</label>
           <input type="text" name="traccar_username" id="traccar_username" value="{{ settings.get('traccar_username', '') }}"
                  placeholder="admin"
-                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
         </div>
         <div>
           <label class="block text-sm text-gray-300 mb-1">Password</label>
           <input type="password" name="traccar_password" id="traccar_password" value="{{ settings.get('traccar_password', '') }}"
-                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+                 class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
         </div>
       </div>
       <div class="flex items-center gap-3">
@@ -245,7 +257,7 @@
       </div>
       <div>
         <button type="button" onclick="testTraccarConnection()"
-                class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded transition">
+                class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded-xl transition">
           🔗 Test Connection
         </button>
       </div>
@@ -254,7 +266,7 @@
 
     <div class="flex justify-end">
       <button type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded transition">
+              class="bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-gray-950 text-sm font-medium px-6 py-2 rounded-xl transition">
         Save Settings
       </button>
     </div>

@@ -1,38 +1,7 @@
 from datetime import date
 from google import genai
 from models.settings import get_setting
-from models.database import get_db, close_db
 from models import trip as trip_model
-
-
-def _get_overdue_trips() -> list[dict]:
-    db = get_db()
-    try:
-        rows = db.execute(
-            """SELECT id, from_location, to_location, status,
-                      CAST(julianday('now') - julianday(dispatched_at) AS INTEGER) as days_out
-               FROM trips
-               WHERE status IN ('dispatched', 'in_transit')
-                 AND dispatched_at IS NOT NULL
-                 AND julianday('now') - julianday(dispatched_at) >= 2
-               ORDER BY days_out DESC""",
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        close_db(db)
-
-
-def _get_today_revenue() -> float:
-    db = get_db()
-    today = date.today().isoformat()
-    try:
-        row = db.execute(
-            "SELECT COALESCE(SUM(freight_amount), 0) as total FROM trips WHERE DATE(paid_at) = ?",
-            (today,),
-        ).fetchone()
-        return float(row['total']) if row else 0.0
-    finally:
-        close_db(db)
 
 
 def generate_daily_summary() -> str:
@@ -42,8 +11,8 @@ def generate_daily_summary() -> str:
         return ''
     try:
         stats = trip_model.get_trip_stats()
-        revenue = _get_today_revenue()
-        overdue = _get_overdue_trips()
+        revenue = trip_model.get_revenue_on_date(date.today().isoformat())
+        overdue = trip_model.get_overdue_trips()
         company = get_setting('company_name', 'DispatchIQ')
 
         overdue_text = ', '.join(

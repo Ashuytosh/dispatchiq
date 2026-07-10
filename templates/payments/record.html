@@ -9,7 +9,7 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
   <div class="space-y-6">
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Trip Information</h2>
       <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
         <div>
@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Previous Payments</h2>
       {% if payments %}
       <div class="overflow-x-auto">
@@ -68,18 +68,18 @@
     </div>
   </div>
 
-  <div class="bg-gray-900 border border-gray-800 rounded-lg p-5">
+  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5">
     <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Record Payment</h2>
     <form method="POST" action="{{ url_for('payments.record', trip_id=trip.id) }}" class="space-y-4">
       <div>
         <label class="block text-xs text-gray-400 mb-1">Amount (₹)</label>
         <input type="number" name="amount" required min="0.01" max="{{ remaining }}" step="0.01"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-xs text-gray-400 mb-1">Payment Mode</label>
         <select name="payment_mode" id="payment_mode" required
-                class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+                class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
           <option value="cash">Cash</option>
           <option value="bank_transfer">Bank Transfer</option>
           <option value="upi">UPI</option>
@@ -89,20 +89,20 @@
       <div id="ref-field" class="hidden">
         <label class="block text-xs text-gray-400 mb-1">Payment Reference</label>
         <input type="text" name="payment_reference" placeholder="UTR / Cheque number"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-xs text-gray-400 mb-1">Payment Date</label>
         <input type="text" name="payment_date" required value="{{ today }}" placeholder="DD-MM-YYYY"
                pattern="\d{2}-\d{2}-\d{4}"
-               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500">
+               class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent">
       </div>
       <div>
         <label class="block text-xs text-gray-400 mb-1">Notes</label>
         <textarea name="notes" rows="3"
-                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded px-3 py-2 focus:outline-none focus:border-blue-500"></textarea>
+                  class="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"></textarea>
       </div>
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded transition">
+      <button type="submit" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-gray-950 text-sm font-medium py-2 rounded-xl transition">
         Record Payment
       </button>
     </form>

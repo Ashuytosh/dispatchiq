@@ -4,28 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}DispatchIQ{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } };
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col font-sans">
 
-  <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+  <nav class="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-14">
-        <a href="/" class="text-white font-bold text-lg tracking-tight">
+        <a href="{{ url_for('dashboard.index') }}" class="text-white font-bold text-lg tracking-tight">
           🚚 DispatchIQ
         </a>
         <div class="flex space-x-1 items-center">
           {% macro nav_link(endpoint, path, label) %}
             {% if request.endpoint == endpoint or (request.path.startswith(path) and path != '/') %}
               <a href="{{ url_for(endpoint) }}"
-                 class="px-3 py-2 rounded text-sm font-medium bg-gray-800 text-white">
+                 class="px-3 py-2 rounded text-sm font-medium bg-gray-800 text-white border-b-2 border-amber-500">
                 {{ label }}
               </a>
             {% elif endpoint == 'dashboard.index' and request.path == '/' %}
               <a href="{{ url_for(endpoint) }}"
-                 class="px-3 py-2 rounded text-sm font-medium bg-gray-800 text-white">
+                 class="px-3 py-2 rounded text-sm font-medium bg-gray-800 text-white border-b-2 border-amber-500">
                 {{ label }}
               </a>
             {% else %}
@@ -37,17 +44,19 @@
           {% endmacro %}
 
           {{ nav_link('dashboard.index', '/', 'Dashboard') }}
-          <a id="fleet-map-nav" href="{{ url_for('map.fleet_map') }}" style="display:none"
+          {% if traccar_configured %}
+          <a href="{{ url_for('map.fleet_map') }}"
              class="px-3 py-2 rounded text-sm font-medium
-                    {% if request.path.startswith('/map') %}bg-gray-800 text-white{% else %}text-gray-400 hover:text-white hover:bg-gray-800{% endif %} transition">
+                    {% if request.path.startswith('/map') %}bg-gray-800 text-white border-b-2 border-amber-500{% else %}text-gray-400 hover:text-white hover:bg-gray-800{% endif %} transition">
             🗺️ Fleet Map
           </a>
+          {% endif %}
           {{ nav_link('trips.list_trips', '/trips', 'Trips') }}
 
           <div class="relative">
             <button data-menu-toggle="payments-menu"
                     class="flex items-center gap-1 px-3 py-2 rounded text-sm font-medium
-                           {% if request.path.startswith('/payments') %}bg-gray-800 text-white
+                           {% if request.path.startswith('/payments') %}bg-gray-800 text-white border-b-2 border-amber-500
                            {% else %}text-gray-400 hover:text-white hover:bg-gray-800{% endif %} transition">
               Payments
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,16 +152,11 @@
   </footer>
 
   <script>
+    lucide.createIcons();
+
     fetch('/api/whatsapp/status').then(r=>r.json()).then(d=>{
       const dot=document.getElementById('wa-dot');
       if(dot) dot.className='w-2 h-2 rounded-full flex-shrink-0 '+(d.connected?'bg-green-500':'bg-red-500');
-    }).catch(()=>{});
-
-    fetch('/api/map/positions').then(r=>r.json()).then(d=>{
-      if (Array.isArray(d) && d.length > 0) {
-        const link = document.getElementById('fleet-map-nav');
-        if (link) link.style.display = '';
-      }
     }).catch(()=>{});
 
     document.querySelectorAll('[data-menu-toggle]').forEach(function(btn) {
