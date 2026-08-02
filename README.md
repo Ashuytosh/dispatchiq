@@ -12,17 +12,21 @@ DispatchIQ is a complete dispatch and trip management system built for Indian tr
 
 ## 📸 Screenshots
 
-![Dashboard](screenshots/dashboard.png)
+![Landing Page](screenshots/Landing_Page.png)
+*Landing Page of the Website*
+
+![Dashboard](screenshots/Dashboard.png)
+*Dashboard with active Trips*
+
+![Analytical Dashboard](screenshots/Analytical_Dashboard.png)
 *Dashboard with analytics charts*
 
-![Trip Detail](screenshots/trip-detail.png)
+![Trip Detail](screenshots/Vehicle_Trips.png)
 *Trip detail page with status progress bar*
 
-![LR PDF](screenshots/lr-pdf.png)
-*Generated LR/Bilti PDF*
+![LR PDF](screenshots/LR_PDF.png)
+*Generated LR PDF*
 
-![WhatsApp Notification](screenshots/whatsapp-notification.png)
-*WhatsApp notification on phone*
 
 > Screenshots will be added after final UI polish.
 
