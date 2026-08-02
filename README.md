@@ -28,8 +28,6 @@ DispatchIQ is a complete dispatch and trip management system built for Indian tr
 *Generated LR PDF*
 
 
-> Screenshots will be added after final UI polish.
-
 ## ✨ Features
 
 - 🚛 **Trip Management** — Full lifecycle from booking to payment with enforced state machine
